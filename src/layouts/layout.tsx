@@ -10,53 +10,124 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Bell,
+  Languages,
+  MoonIcon,
+  SunIcon,
+} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { useId, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  // DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const id = useId();
+  const [checked, setChecked] = useState(true);
+  const toggleSwitch = () => setChecked((prev) => !prev);
+
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider>
       <AppSidebar />
 
       <div className="flex flex-1 flex-col">
         <header className="bg-card sticky top-0 z-50 border-b">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-2 sm:px-6">
+          <div className="mx-auto flex items-center justify-between gap-6 px-4 py-3 sm:px-6">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="[&_svg]:!size-5" />
+              {/* Trigger Sidebar */}
+              <SidebarTrigger className="[&_svg]:size-5!" />
+
               <Separator
                 orientation="vertical"
-                className="hidden !h-4 sm:block"
+                className="hidden h-4! sm:block"
               />
+
+              {/* Breadcrumb */}
               <Breadcrumb className="hidden sm:block">
                 <BreadcrumbList>
                   <BreadcrumbItem>
-                    <BreadcrumbLink href="#">Home</BreadcrumbLink>
+                    <BreadcrumbPage>Home</BreadcrumbPage>
                   </BreadcrumbItem>
+                  {/* <BreadcrumbItem>
+                    <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                  </BreadcrumbItem> */}
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                    <BreadcrumbLink>Dashboard</BreadcrumbLink>
                   </BreadcrumbItem>
-                  <BreadcrumbSeparator />
+                  {/* <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbPage>Free</BreadcrumbPage>
-                  </BreadcrumbItem>
+                  </BreadcrumbItem> */}
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
+
+            {/* Right side */}
+            <div
+              className="flex group items-center gap-2"
+              data-state={checked ? "checked" : "unchecked"}
+            >
+              <span
+                id={`${id}-light`}
+                className="group-data-[state=checked]:text-muted-foreground/70 cursor-pointer text-left text-sm font-medium"
+                aria-controls={id}
+                onClick={() => setChecked(false)}
+              >
+                <SunIcon className="size-4" aria-hidden="true" />
+              </span>
+              <Switch
+                id={id}
+                checked={checked}
+                onCheckedChange={toggleSwitch}
+                aria-labelledby={`${id}-dark ${id}-light`}
+                aria-label="Toggle between dark and light mode"
+              />
+              <span
+                id={`${id}-dark`}
+                className="group-data-[state=unchecked]:text-muted-foreground/70 cursor-pointer text-right text-sm font-medium"
+                aria-controls={id}
+                onClick={() => setChecked(true)}
+              >
+                <MoonIcon className="size-4" aria-hidden="true" />
+              </span>
+
+              <div className="flex flex-wrap items-center ml-2 gap-2 md:flex-row">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Languages className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem>English</DropdownMenuItem>
+                    <DropdownMenuItem>Tiếng Việt</DropdownMenuItem>
+                    <DropdownMenuItem>日本語</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Button variant="ghost" size="icon">
+                  <Bell />
+                </Button>
+              </div>
+            </div>
           </div>
         </header>
-        <main className="mx-auto size-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
+        <main className="mx-auto size-full flex-1 px-4 py-6 sm:px-6">
           <Card className="h-250">
             <CardContent className="h-full">
-              <div className="border-card-foreground/10 h-full rounded-md border bg-[repeating-linear-gradient(45deg,color-mix(in_oklab,var(--card-foreground)10%,transparent),color-mix(in_oklab,var(--card-foreground)10%,transparent)_1px,var(--card)_2px,var(--card)_15px)]">
+              <div className="border-card-foreground/10 h-full rounded-md">
                 {children}
               </div>
             </CardContent>
           </Card>
         </main>
-        <footer className="bg-card h-10 border-t">
-          <div className="mx-auto size-full max-w-7xl px-4 sm:px-6">
-            <div className="border-card-foreground/10 h-full bg-[repeating-linear-gradient(45deg,color-mix(in_oklab,var(--card-foreground)10%,transparent),color-mix(in_oklab,var(--card-foreground)10%,transparent)_1px,var(--card)_2px,var(--card)_15px)]" />
-          </div>
-        </footer>
       </div>
     </SidebarProvider>
   );
