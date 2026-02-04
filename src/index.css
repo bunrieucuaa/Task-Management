@@ -146,3 +146,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+.custom-button {
+  background-color: #04AA6D; /* Green background */
+  color: white;              /* White text */
+  padding: 0px 24px;        /* Space around the text */
+  border: none;              /* Remove default border */
+  border-radius: 8px;        /* Rounded corners */
+  cursor: pointer;           /* Change cursor to a hand on hover */
+  font-size: 16px;           /* Adjust font size */
+}
