@@ -1,8 +1,14 @@
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import TaskCreateUpadate from "@/components/pages/TaskCreateUpadate";
+import { Button } from "@/components/ui/button";
+import { increment } from "@/redux/counterSlice";
 import { useState } from "react";
+// import { toast } from "sonner";
 
 export default function Tasks() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean | undefined>(false);
+  const counter = useAppSelector((state) => state.counter);
+  const dispatchCounter = useAppDispatch();
 
   return (
     <div className="space-y-6">
@@ -29,7 +35,20 @@ export default function Tasks() {
         </div>
       </div>
       {/* Content */}
-      <div className="rounded-lg bg-white p-4 shadow-sm"></div>
+      <div className="rounded-lg bg-white p-4 shadow-sm">
+        <Button
+          onClick={() =>
+            // toast("Event has been created", { position: "top-left" }
+
+            // )
+            dispatchCounter(increment())
+          }
+        >
+          Counter
+        </Button>
+
+        <span>{counter.value}</span>
+      </div>
     </div>
   );
 }

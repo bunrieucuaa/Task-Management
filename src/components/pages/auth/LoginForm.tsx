@@ -6,52 +6,136 @@ import {
   FieldGroup,
   FieldLabel,
   FieldSeparator,
+  FieldError,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Link } from "@tanstack/react-router";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { Controller, useForm } from "react-hook-form";
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"form">) {
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 32;
+
+const formSchema = z.object({
+  email: z
+    .string()
+    .email("Email không hợp lệ")
+    .min(1, { message: "Email không được trống" }),
+  password: z
+    .string()
+    .min(1, { message: "Mật khẩu không được trống" }) // Đảm bảo không bị chuỗi rỗng
+    .min(MIN_PASSWORD_LENGTH, {
+      message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`,
+    })
+    .max(MAX_PASSWORD_LENGTH, {
+      message: `Password must not exceed ${MAX_PASSWORD_LENGTH} characters`,
+    })
+    .regex(/[A-Z]/, {
+      message: "Password must contain at least one uppercase letter",
+    })
+    .regex(/[a-z]/, {
+      message: "Password must contain at least one lowercase letter",
+    })
+    .regex(/[0-9]/, {
+      message: "Password must contain at least one number",
+    })
+    .regex(/[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/, {
+      message: "Password must contain at least one special character",
+    }),
+});
+
+export function LoginForm() {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    toast("You submitted the following values:", {
+      description: (
+        <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
+          <code>{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
+      position: "bottom-right",
+      classNames: {
+        content: "flex flex-col gap-2",
+      },
+      style: {
+        "--border-radius": "calc(var(--radius)  + 4px)",
+      } as React.CSSProperties,
+    });
+
+    console.log("Data check>>>", data);
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form
+      id="form-rhf-login"
+      className={cn("flex flex-col gap-6")}
+      onSubmit={form.handleSubmit(onSubmit)}
+    >
+      <div className="flex flex-col items-center gap-1 text-center">
+        <h1 className="text-2xl font-bold bg-linear-to-r from-[#22c55e] via-[#60a5fa] to-[#a78bfa] bg-clip-text text-transparent">
+          Đăng nhập
+        </h1>
+      </div>
       <FieldGroup>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold bg-linear-to-r from-[#22c55e] via-[#60a5fa] to-[#a78bfa] bg-clip-text text-transparent">
-            Đăng nhập
-          </h1>
-        </div>
-        <Field>
-          <FieldLabel htmlFor="email">Tài khoản</FieldLabel>
-          <Input
-            id="email"
-            type="email"
-            placeholder="Vui lòng nhập tên đăng nhập"
-            required
-          />
-        </Field>
-        <Field>
-          <div className="flex items-center">
-            <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
-            <Link
-              to="/reset-password"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
-              Quên mật khẩu ?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            required
-            placeholder="•••••••••••••"
-          />
-        </Field>
+        <Controller
+          name="email"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="form-rhf-login-email">Email</FieldLabel>
+              <Input
+                {...field}
+                id="form-rhf-login-email"
+                aria-invalid={fieldState.invalid}
+                placeholder="Email"
+                autoComplete="off"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="password"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="form-rhf-login-password">
+                Mật khẩu
+              </FieldLabel>
+              {/* <Link
+                to="/reset-password"
+                className="ml-auto text-sm underline-offset-4 hover:underline"
+              >
+                Quên mật khẩu ?
+              </Link> */}
+
+              <Input
+                {...field}
+                id="form-rhf-login-password"
+                aria-invalid={fieldState.invalid}
+                placeholder="••••••••••••"
+                autoComplete="off"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
         <Field>
           <Button
             className="bg-linear-to-r from-[#22c55e] via-[#60a5fa] to-[#a78bfa]"
             type="submit"
+            form="form-rhf-login"
           >
             Đăng nhập
           </Button>

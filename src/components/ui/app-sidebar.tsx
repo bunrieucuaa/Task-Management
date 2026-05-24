@@ -1,10 +1,8 @@
 import {
   Calendar,
   Home,
-  LogOutIcon,
   Settings,
   Train,
-  UserIcon,
 } from "lucide-react";
 
 import {
@@ -19,13 +17,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Link, useLocation } from "@tanstack/react-router";
+import { NavUser } from "./nav-footer";
 
 // Menu items.
 const items = [
@@ -50,6 +44,13 @@ const items = [
     icon: Settings,
   },
 ];
+
+
+const user = {
+  name: "Admin",
+  email: "adminm@example.com",
+  avatar: "/avatars/shadcn.jpg",
+};
 
 export function AppSidebar() {
   const { pathname } = useLocation();
@@ -94,25 +95,8 @@ export function AppSidebar() {
       </SidebarContent>
       {/* Footer */}
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <UserIcon />
-                  <span style={{ fontWeight: 700 }}>User</span>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="end" className="w-20">
-                <DropdownMenuItem>
-                  <LogOutIcon />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavUser user={user} /> 
       </SidebarFooter>
     </Sidebar>
   );
-}
+}   
