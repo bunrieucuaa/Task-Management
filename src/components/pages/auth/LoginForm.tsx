@@ -9,11 +9,15 @@ import {
   FieldError,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Controller, useForm } from "react-hook-form";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { postLogins } from "@/redux/authSlice";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 32;
@@ -47,6 +51,11 @@ const formSchema = z.object({
 });
 
 export function LoginForm() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { loading } = useAppSelector((state) => state.auth);
+  const [showPassword, setShowPassword] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,22 +65,24 @@ export function LoginForm() {
   });
 
   function onSubmit(data: z.infer<typeof formSchema>) {
-    toast("You submitted the following values:", {
-      description: (
-        <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-code p-4 text-code-foreground">
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-      position: "bottom-right",
-      classNames: {
-        content: "flex flex-col gap-2",
-      },
-      style: {
-        "--border-radius": "calc(var(--radius)  + 4px)",
-      } as React.CSSProperties,
-    });
-
-    console.log("Data check>>>", data);
+    dispatch(postLogins(data))
+      .unwrap()
+      .then((result) => {
+        if (result.isValid) {
+          if (result.mustChangePassword) {
+            toast.info("Bạn cần đổi mật khẩu trước khi tiếp tục!", { position: "bottom-right" });
+            navigate({ to: "/change-password" });
+          } else {
+            toast.success("Đăng nhập thành công!", { position: "bottom-right" });
+            navigate({ to: "/" });
+          }
+        } else {
+          toast.error("Tài khoản không có quyền truy cập (Yêu cầu Admin)!", { position: "bottom-right" });
+        }
+      })
+      .catch((error) => {
+        console.error("Login dispatch error:", error);
+      });
   }
 
   return (
@@ -119,13 +130,28 @@ export function LoginForm() {
                 Quên mật khẩu ?
               </Link> */}
 
-              <Input
-                {...field}
-                id="form-rhf-login-password"
-                aria-invalid={fieldState.invalid}
-                placeholder="••••••••••••"
-                autoComplete="off"
-              />
+              <div className="relative">
+                <Input
+                  {...field}
+                  id="form-rhf-login-password"
+                  type={showPassword ? "text" : "password"}
+                  aria-invalid={fieldState.invalid}
+                  placeholder="••••••••••••"
+                  autoComplete="off"
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-1 my-auto text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </Button>
+              </div>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
@@ -136,8 +162,9 @@ export function LoginForm() {
             className="bg-linear-to-r from-[#22c55e] via-[#60a5fa] to-[#a78bfa]"
             type="submit"
             form="form-rhf-login"
+            disabled={loading}
           >
-            Đăng nhập
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </Button>
         </Field>
         <FieldSeparator>Hoặc tiếp tục với</FieldSeparator>

@@ -46,11 +46,6 @@ const items = [
 ];
 
 
-const user = {
-  name: "Admin",
-  email: "adminm@example.com",
-  avatar: "/avatars/shadcn.jpg",
-};
 
 export function AppSidebar() {
   const { pathname } = useLocation();
@@ -95,7 +90,7 @@ export function AppSidebar() {
       </SidebarContent>
       {/* Footer */}
       <SidebarFooter>
-        <NavUser user={user} /> 
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );

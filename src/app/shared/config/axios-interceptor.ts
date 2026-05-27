@@ -1,4 +1,4 @@
-import { ACCESS_LANGUAGE } from "./../../core/constants";
+// import { ACCESS_LANGUAGE } from "./../../core/constants";
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import {
   ACCESS_TOKEN_NAME,
@@ -6,84 +6,105 @@ import {
   REFRESH_TOKEN_NAME,
 } from "../../core/constants";
 import { EResultCode } from "../enums/EResultCode";
-import { jwtDecode ,type JwtPayload } from "jwt-decode";
-import { decrypt } from "./crypto-js";
-// import { AuthRepository } from "../../repositories/AuthRepository";
-// import { ELanguage } from "../enums/ELanguage";
+import { decrypt, encrypt } from "./crypto-js";
 
 const TIMEOUT = 1 * 60 * 1000;
 axios.defaults.timeout = TIMEOUT;
-axios.defaults.baseURL = BASE_API_URL || "http://localhost:8080/api/v1";
+axios.defaults.baseURL = BASE_API_URL;
 
-const onRequestSuccess = (config: InternalAxiosRequestConfig<any>) => {
-//   let languagetoLocalStorage: ELanguage;
+// Instance KHÔNG có interceptor — dùng riêng cho /auth/refresh
+// để tránh vòng lặp vô tận khi refresh thất bại
+const axiosPublic = axios.create({
+  baseURL: BASE_API_URL,
+  timeout: TIMEOUT,
+});
+
+// Mở rộng kiểu config để thêm cờ _retry
+interface RetryConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+const onRequestSuccess = (config: InternalAxiosRequestConfig<unknown>) => {
   const tokenEncode =
     localStorage.getItem(ACCESS_TOKEN_NAME) ||
     sessionStorage.getItem(ACCESS_TOKEN_NAME);
-
-//   try {
-//     languagetoLocalStorage = localStorage.getItem(ACCESS_LANGUAGE) as ELanguage;
-//   } catch (error) {
-//     console.error("Error retrieving language from localStorage:", error);
-//     languagetoLocalStorage = ELanguage.Vi;
-//   }
-
-//   config.headers[ACCESS_LANGUAGE] = languagetoLocalStorage;
 
   const token = decrypt(tokenEncode ?? "");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
-  if (config.url === `${EDUSOFT}/auth/login`) {
-    const refreshTokenEndcode =
-      localStorage.getItem(REFRESH_TOKEN_NAME) ||
-      sessionStorage.getItem(REFRESH_TOKEN_NAME);
-
-    const refreshToken = decrypt(refreshTokenEndcode ?? "");
-    config.headers.refreshToken = refreshToken;
-  }
   return config;
 };
+
+// Gọi /auth/refresh qua axiosPublic — KHÔNG đi qua interceptor response
+async function callRefreshToken(): Promise<string | null> {
+  try {
+    const encryptedRfToken =
+      localStorage.getItem(REFRESH_TOKEN_NAME) ||
+      sessionStorage.getItem(REFRESH_TOKEN_NAME);
+    const refreshToken = decrypt(encryptedRfToken ?? "");
+
+    if (!refreshToken) {
+      console.warn("[Interceptor] Không tìm thấy refresh token trong storage");
+      return null;
+    }
+
+    console.log("[Interceptor] Đang gọi /auth/refresh...");
+
+    const response = await axiosPublic.post<{
+      success: boolean;
+      data: { accessToken: string };
+    }>("/auth/refresh", { refreshToken });
+
+    console.log("[Interceptor] Response refresh:", response.data);
+
+    if (response.data?.success && response.data.data?.accessToken) {
+      const newEncryptedToken = encrypt(response.data.data.accessToken);
+      localStorage.setItem(ACCESS_TOKEN_NAME, newEncryptedToken);
+      console.log("[Interceptor] Refresh thành công, token mới đã được lưu");
+      return response.data.data.accessToken; // trả về token RAW để gán vào header
+    }
+    return null;
+  } catch (err) {
+    console.error("[Interceptor] Refresh token thất bại:", err);
+    return null;
+  }
+}
 
 const setupAxiosInterceptors = (onUnauthenticated: () => void) => {
   const onResponseError = async (err: AxiosError) => {
     const status = err.response?.status || err.status;
-    // if (status === 403 || status === 401) {
-    //   onUnauthenticated();
-    // }
-    const config = err.config || {};
-    const tokenEncode =
-      localStorage.getItem(ACCESS_TOKEN_NAME) ||
-      sessionStorage.getItem(ACCESS_TOKEN_NAME);
+    const config = err.config as RetryConfig | undefined;
 
-    const token = decrypt(tokenEncode ?? "");
-    if (
-      status === Number(EResultCode.UNAUTHORIZED) &&
-      !checkTokenValidity(token)
-    ) {
-      await new AuthRepository().refreshTokenAsync();
-      return await axios.request(config);
-    } else if (status === Number(EResultCode.FORBIDDEN)) {
+    console.log("[Interceptor] Response error status:", status, "| _retry:", config?._retry);
+
+    // Chỉ thử refresh một lần — nếu config đã có _retry=true thì bỏ qua
+    if (status === Number(EResultCode.UNAUTHORIZED) && config && !config._retry) {
+      config._retry = true;
+
+      const newAccessToken = await callRefreshToken();
+
+      if (newAccessToken) {
+        // Cập nhật token mới vào header của request cũ rồi retry
+        config.headers.Authorization = `Bearer ${newAccessToken}`;
+        return axios.request(config);
+      }
+
+      // Refresh thất bại → đăng xuất
+      console.warn("[Interceptor] Refresh thất bại → đăng xuất");
+      onUnauthenticated();
+      return Promise.reject(err);
+    }
+
+    if (status === Number(EResultCode.FORBIDDEN)) {
       onUnauthenticated();
     }
+
     return Promise.reject(err);
   };
-  if (axios.interceptors) {
-    axios.interceptors.request.use(onRequestSuccess);
-    axios.interceptors.response.use((res) => res, onResponseError);
-  }
-  axios.interceptors.request.use((config) => {
-    return config;
-  });
-};
 
-function checkTokenValidity(token: string) {
-  if (token) {
-    const decodedToken = jwtDecode<JwtPayload>(token);
-    return decodedToken.exp && decodedToken.exp * 1000 > new Date().getTime();
-  }
-  return false;
-}
+  axios.interceptors.request.use(onRequestSuccess);
+  axios.interceptors.response.use((res) => res, onResponseError);
+};
 
 export { onRequestSuccess, setupAxiosInterceptors };

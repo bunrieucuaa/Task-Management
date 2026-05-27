@@ -9,7 +9,12 @@ import NotFound from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
 import { store } from "@/redux/store";
 import { Provider } from "react-redux";
+import { clearAuthentication } from "@/redux/authSlice";
+import { setupAxiosInterceptors } from "./app/shared/config/axios-interceptor";
 
+setupAxiosInterceptors(() => {
+  store.dispatch(clearAuthentication());
+});
 // Create a new router instance
 const router = createRouter({
   routeTree,

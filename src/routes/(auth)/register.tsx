@@ -1,7 +1,12 @@
 import RegisterPage from "@/pages/auth/Register";
+import GuestGuard from "@/layouts/GuestGuard";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(auth)/register")({
-  component: RegisterPage,
+  component: () => (
+    <GuestGuard>
+      <RegisterPage />
+    </GuestGuard>
+  ),
 });
 
