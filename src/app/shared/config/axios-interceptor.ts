@@ -96,8 +96,13 @@ const setupAxiosInterceptors = (onUnauthenticated: () => void) => {
       return Promise.reject(err);
     }
 
+    // 403 từ các route được bảo vệ → đăng xuất
+    // Bỏ qua /auth/login để tránh logout khi login có mustChangePassword
     if (status === Number(EResultCode.FORBIDDEN)) {
-      onUnauthenticated();
+      const url = config?.url ?? "";
+      if (!url.includes("/auth/login")) {
+        onUnauthenticated();
+      }
     }
 
     return Promise.reject(err);

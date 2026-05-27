@@ -6,6 +6,9 @@ import { BadgeCheck, Mail, ShieldCheck, User } from "lucide-react";
 export default function AccountPage() {
   const { user } = useAppSelector((state) => state.auth);
 
+  console.log("User", user);
+  
+
   const initials = user?.name
     ? user.name
         .split(" ")
@@ -26,7 +29,7 @@ export default function AccountPage() {
       {/* Avatar + Name Card */}
       <div className="rounded-xl border bg-card p-6 flex items-center gap-5 shadow-sm">
         <Avatar className="size-20 rounded-xl">
-          <AvatarImage src="" alt={user?.name ?? "User"} />
+          <AvatarImage src="" alt={user?.name} />
           <AvatarFallback className="rounded-xl text-2xl font-bold bg-linear-to-br from-[#22c55e] via-[#60a5fa] to-[#a78bfa] text-white">
             {initials}
           </AvatarFallback>

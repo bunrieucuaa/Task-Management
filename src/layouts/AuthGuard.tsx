@@ -9,15 +9,15 @@ interface AuthGuardProps {
 
 const AuthGuard = ({ isPrivate }: AuthGuardProps) => {
   const dispatch = useAppDispatch();
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user, mustChangePassword } = useAppSelector((state) => state.auth);
 
   // Sau khi reload trang: token vẫn hợp lệ nhưng user bị reset về null
-  // → Gọi lại /me để khôi phục thông tin user vào store
+  // Không gọi /me khi mustChangePassword=true vì BE sẽ trả 403 → gây logout không mong muốn
   useEffect(() => {
-    if (isAuthenticated && user === null) {
+    if (isAuthenticated && user === null && !mustChangePassword) {
       dispatch(getMe());
     }
-  }, [isAuthenticated, user, dispatch]);
+  }, [isAuthenticated, user, mustChangePassword, dispatch]);
 
   return isAuthenticated && isPrivate ? <Outlet /> : <Navigate to="/login" />;
 };

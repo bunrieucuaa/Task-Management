@@ -81,8 +81,11 @@ export const postLogins = createAsyncThunk(
         localStorage.setItem(REFRESH_TOKEN_NAME, refreshToken);
         thunkAPI.dispatch(updateIsAuthenticated(true));
         thunkAPI.dispatch(setMustChangePassword(data.mustChangePassword ?? false));
-        // Lấy thông tin user sau khi đăng nhập thành công
-        thunkAPI.dispatch(getMe());
+        // Chỉ gọi /me khi user KHÔNG cần đổi mật khẩu
+        // Nếu mustChangePassword=true thì /me sẽ trả 403 → gây logout không mong muốn
+        if (!data.mustChangePassword) {
+          thunkAPI.dispatch(getMe());
+        }
       }
       return { isValid: check, mustChangePassword: data.mustChangePassword ?? false };
     }
@@ -172,6 +175,7 @@ export const authSlice = createSlice({
     builder.addCase(changePassword.fulfilled, (state) => {
       state.loading = false;
       state.user = null;
+      state.mustChangePassword = false;
     });
     builder.addCase(changePassword.rejected, (state) => {
       state.loading = false;
