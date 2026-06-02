@@ -4,7 +4,7 @@ import {
   REFRESH_TOKEN_NAME,
 } from "../core/constants";
 import type { IAuth, ITokenEntity } from "../entities/auth.entity";
-import type { IUser } from "../entities/user.entity";
+import type { IUserResponseData } from "../entities/user.entity";
 import { decrypt, encrypt } from "../shared/config/crypto-js";
 import { BaseApiService } from "./BaseApiService";
 
@@ -16,10 +16,10 @@ export class AuthRepository extends BaseApiService<IAuth> {
   }
 
   async getMeAsync() {
-    const response = await this.getOtherTypeAsync<IUser>({
+    const response = await this.getOtherTypeAsync<IUserResponseData>({
       url: `${this.url}/me`,
-      query: {}
-    })
+      query: {},
+    });
     return response;
   }
 

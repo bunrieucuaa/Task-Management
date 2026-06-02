@@ -1,19 +1,25 @@
-import _ from "lodash";
-
 export const isAuthenValidate = (
-  payload: Object,
+  payload: object,
   roles: string[],
   isUpperCase = true,
 ) => {
-  const results = _.filter(payload, function (_v, k) {
-    return _.includes(k.toUpperCase(), "role".toUpperCase());
-  });
-  const roleFromObjects = _.flattenDeep(results);
+  const roleValues = Object.entries(payload as Record<string, unknown>)
+    .filter(([key]) => key.toLowerCase().includes("role"))
+    .flatMap(([, value]) => (Array.isArray(value) ? value.flat(Infinity) : [value]));
 
-  const compareIgnoreCase = (str1: any, str2: any) => {
-    if (isUpperCase) return str1.toLowerCase() === str2.toLowerCase();
-    return str1 === str2;
+  const compareIgnoreCase = (value: unknown, role: string) => {
+    if (typeof value !== "string") {
+      return false;
+    }
+
+    if (isUpperCase) {
+      return value.toLowerCase() === role.toLowerCase();
+    }
+
+    return value === role;
   };
-  const res = _.intersectionWith(roleFromObjects, roles, compareIgnoreCase);
-  return res.length > 0;
+
+  return roleValues.some((value) =>
+    roles.some((role) => compareIgnoreCase(value, role)),
+  );
 };

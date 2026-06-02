@@ -11,7 +11,7 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
     this._url = url;
   }
 
-  async listAsync(query: Object): Promise<TypedResponseApi<IPagination<T>>> {
+  async listAsync(query: object): Promise<TypedResponseApi<IPagination<T>>> {
     const response = await BaseApiDataSource.get<
       TypedResponseApi<IPagination<T>>
     >(this._url, { ...query });
@@ -19,7 +19,7 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
   }
 
   async listWithCountAsync<TEntity>(
-    query: Object,
+    query: object,
   ): Promise<TypedResponseApi<TEntity>> {
     const response = await BaseApiDataSource.get<TypedResponseApi<TEntity>>(
       this._url,
@@ -30,7 +30,7 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
 
   async listOTherTypeWithCountAsync<TEntity>(payload: {
     url: string;
-    query: Object;
+    query: object;
   }): Promise<TypedResponseApi<TEntity>> {
     const response = await BaseApiDataSource.get<TypedResponseApi<TEntity>>(
       payload.url,
@@ -41,7 +41,7 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
 
   async listOTherTypeAsync<TEntity>(payload: {
     url: string;
-    query: Object;
+    query: object;
   }): Promise<TypedResponseApi<IPagination<TEntity>>> {
     const response = await BaseApiDataSource.get<
       TypedResponseApi<IPagination<TEntity>>
@@ -69,7 +69,7 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
 
   async getOtherTypeAsync<TEntity>(payload: {
     url: string;
-    query: Object;
+    query: object;
   }): Promise<TypedResponseApi<TEntity>> {
     const response = await BaseApiDataSource.get<TypedResponseApi<TEntity>>(
       `${payload.url}`,
@@ -80,7 +80,7 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
     return response;
   }
 
-  createAsync = async (payload: Object): Promise<TypedResponseApi<T>> => {
+  createAsync = async (payload: object): Promise<TypedResponseApi<T>> => {
     const response = await BaseApiDataSource.post<TypedResponseApi<T>>(
       `${this._url}`,
       payload,
@@ -90,7 +90,7 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
 
   async createOtherTypeAsync<TEntity>(payload: {
     url: string;
-    value: Object;
+    value: object;
   }): Promise<TypedResponseApi<TEntity>> {
     const response = await BaseApiDataSource.post<TypedResponseApi<TEntity>>(
       `${payload.url}`,
@@ -101,7 +101,7 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
 
   updateAsync = async (
     id: string,
-    payload: Object,
+    payload: object,
   ): Promise<TypedResponseApi<T>> => {
     const response = await BaseApiDataSource.put<TypedResponseApi<T>>(
       `${this._url}/${id}`,
@@ -110,10 +110,22 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
     return response;
   };
 
+  patchAsync = async (
+    id: string,
+    payload: object,
+  ): Promise<TypedResponseApi<T>> => {
+    const response = await BaseApiDataSource.patch<TypedResponseApi<T>>(
+      `${this._url}/${id}`,
+      payload,
+    );
+    return response;
+  };
+
   async updateStatusCode204Async(
     id: string,
-    payload: Object,
+    payload: object,
   ): Promise<TypedResponseApi<T>> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await BaseApiDataSource.putStatusCode204<any>(
       `${this._url}/${id}`,
       payload,
@@ -128,7 +140,7 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
 
   async updateOtherTypeAsync<TEntity>(payload: {
     url: string;
-    value: Object;
+    value: object;
   }): Promise<TypedResponseApi<TEntity>> {
     const response = await BaseApiDataSource.put<TypedResponseApi<TEntity>>(
       `${payload.url}`,
@@ -137,10 +149,22 @@ export abstract class BaseApiService<T> implements IBaseDataSource<T> {
     return response;
   }
 
+  async patchOtherTypeAsync<TEntity>(payload: {
+    url: string;
+    value: object;
+  }): Promise<TypedResponseApi<TEntity>> {
+    const response = await BaseApiDataSource.patch<TypedResponseApi<TEntity>>(
+      `${payload.url}`,
+      payload.value,
+    );
+    return response;
+  }
+
   async updateOtherTypeStatusCode204Async<TEntity>(payload: {
     url: string;
-    value: Object;
+    value: object;
   }): Promise<TypedResponseApi<TEntity>> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await BaseApiDataSource.putStatusCode204<any>(
       `${payload.url}`,
       payload.value,

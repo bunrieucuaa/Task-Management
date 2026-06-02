@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { getMe } from "@/redux/authSlice";
+import { getMe, hasStoredAuthTokens } from "@/redux/authSlice";
 import { Navigate, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -9,15 +9,26 @@ interface AuthGuardProps {
 
 const AuthGuard = ({ isPrivate }: AuthGuardProps) => {
   const dispatch = useAppDispatch();
-  const { isAuthenticated, user, mustChangePassword } = useAppSelector((state) => state.auth);
+  const { initialized, isAuthenticated, user, mustChangePassword, userLoading } =
+    useAppSelector((state) => state.auth);
 
-  // Sau khi reload trang: token vẫn hợp lệ nhưng user bị reset về null
-  // Không gọi /me khi mustChangePassword=true vì BE sẽ trả 403 → gây logout không mong muốn
   useEffect(() => {
-    if (isAuthenticated && user === null && !mustChangePassword) {
-      dispatch(getMe());
+    if (
+      !initialized ||
+      !isAuthenticated ||
+      user !== null ||
+      mustChangePassword ||
+      userLoading
+    ) {
+      return;
     }
-  }, [isAuthenticated, user, mustChangePassword, dispatch]);
+
+    void dispatch(getMe());
+  }, [initialized, isAuthenticated, user, mustChangePassword, userLoading, dispatch]);
+
+  if (!initialized && hasStoredAuthTokens()) {
+    return null;
+  }
 
   return isAuthenticated && isPrivate ? <Outlet /> : <Navigate to="/login" />;
 };

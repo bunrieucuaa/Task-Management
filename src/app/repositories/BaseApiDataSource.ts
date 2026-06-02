@@ -33,6 +33,12 @@ const BaseApiDataSource = {
       .then((response) => responseBody<T>(response))
       .catch((error: AxiosError) => processError<T>(error)),
 
+  patch: <T>(url: string, data: any) =>
+    axios
+      .patch(url, data)
+      .then((response) => responseBody<T>(response))
+      .catch((error: AxiosError) => processError<T>(error)),
+
   putStatusCode204: <T>(url: string, data: any) =>
     axios
       .put(url, data)

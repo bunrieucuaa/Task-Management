@@ -13,55 +13,79 @@ export interface IAuthState {
   isAuthenticated: boolean;
   mustChangePassword: boolean;
   user: IUser | null;
+  initialized: boolean;
+  initializing: boolean;
+  userLoading: boolean;
 }
 
-const token = decrypt(localStorage.getItem(ACCESS_TOKEN_NAME));
-const storedRefreshToken = decrypt(
-  localStorage.getItem(REFRESH_TOKEN_NAME) ||
-  sessionStorage.getItem(REFRESH_TOKEN_NAME)
-);
+const getStoredValue = (key: string) =>
+  localStorage.getItem(key) || sessionStorage.getItem(key);
 
-let isAuthenticated = false;
-if (token) {
-  try {
-    const decoded = jwtDecode<JwtPayload>(token);
-    const currentTime = Date.now() / 1000;
-    if (decoded.exp && decoded.exp > currentTime) {
-      // Access token còn hạn → xác thực bình thường
-      isAuthenticated = isAuthenValidate(decoded, [ERole.Admin]);
-    } else if (storedRefreshToken) {
-      // Access token hết hạn nhưng còn refresh token
-      // → giữ isAuthenticated = true, để interceptor tự refresh khi API đầu tiên bị 401
-      isAuthenticated = true;
+export const hasStoredAuthTokens = () =>
+  !!(getStoredValue(ACCESS_TOKEN_NAME) || getStoredValue(REFRESH_TOKEN_NAME));
+
+const allowedRoles = [ERole.Admin, ERole.Member];
+
+const resolveStoredAuthState = () => {
+  const token = decrypt(getStoredValue(ACCESS_TOKEN_NAME));
+  const storedRefreshToken = decrypt(getStoredValue(REFRESH_TOKEN_NAME));
+
+  let isAuthenticated = false;
+  if (token) {
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp && decoded.exp > currentTime) {
+        isAuthenticated = isAuthenValidate(decoded, allowedRoles);
+      } else if (storedRefreshToken) {
+        isAuthenticated = true;
+      }
+    } catch {
+      isAuthenticated = !!storedRefreshToken;
     }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (e) {
-    // Token lỗi format nhưng vẫn còn refresh token → cho qua
-    isAuthenticated = !!storedRefreshToken;
+  } else if (storedRefreshToken) {
+    isAuthenticated = true;
   }
-} else if (storedRefreshToken) {
-  // Không có access token nhưng còn refresh token → cho qua
-  isAuthenticated = true;
-}
+
+  return {
+    token: token || "",
+    isAuthenticated,
+  };
+};
 
 const initialState: IAuthState = {
   loading: false,
-  token: token || "",
-  isAuthenticated,
+  token: "",
+  isAuthenticated: false,
   mustChangePassword: false,
   user: null,
+  initialized: false,
+  initializing: false,
+  userLoading: false,
 };
 
-export const getMe = createAsyncThunk(
-  "auth/getMe",
-  async () => {
-    const response = await new AuthRepository().getMeAsync();
-    if (response.success && response.data) {
-      return response.data;
-    }
-    return null;
+export const initializeAuth = createAsyncThunk<
+  Pick<IAuthState, "token" | "isAuthenticated">,
+  void,
+  { state: { auth: Pick<IAuthState, "initialized" | "initializing"> } }
+>(
+  "auth/initialize",
+  async () => resolveStoredAuthState(),
+  {
+    condition: (_, { getState }) => {
+      const { initialized, initializing } = getState().auth;
+      return !initialized && !initializing;
+    },
   },
 );
+
+export const getMe = createAsyncThunk<IUser | null>("auth/getMe", async () => {
+  const response = await new AuthRepository().getMeAsync();
+  if (response.success && response.data?.user) {
+    return response.data.user;
+  }
+  return null;
+});
 
 export const postLogins = createAsyncThunk(
   "login/postLogin",
@@ -71,41 +95,37 @@ export const postLogins = createAsyncThunk(
     const data = response.data;
     if (response.success && data) {
       const check = isAuthenValidate(
-        jwtDecode<JwtPayload>(response.data.accessToken),
-        [ERole.Admin],
+        jwtDecode<JwtPayload>(data.accessToken),
+        allowedRoles,
       );
+
       if (check) {
         const accessToken = encrypt(data.accessToken);
         const refreshToken = encrypt(data.refreshToken);
         localStorage.setItem(ACCESS_TOKEN_NAME, accessToken);
         localStorage.setItem(REFRESH_TOKEN_NAME, refreshToken);
         thunkAPI.dispatch(updateIsAuthenticated(true));
+        thunkAPI.dispatch(setCurrentUser(data.user));
         thunkAPI.dispatch(setMustChangePassword(data.mustChangePassword ?? false));
-        // Chỉ gọi /me khi user KHÔNG cần đổi mật khẩu
-        // Nếu mustChangePassword=true thì /me sẽ trả 403 → gây logout không mong muốn
-        if (!data.mustChangePassword) {
-          thunkAPI.dispatch(getMe());
-        }
       }
+
       return { isValid: check, mustChangePassword: data.mustChangePassword ?? false };
     }
+
     return { isValid: false, mustChangePassword: false };
   },
 );
 
-export const logoutUser = createAsyncThunk(
-  "auth/logout",
-  async (_, thunkAPI) => {
-    const response = await new AuthRepository().logoutAsync();
-    if (response.success) {
-      localStorage.removeItem(ACCESS_TOKEN_NAME);
-      localStorage.removeItem(REFRESH_TOKEN_NAME);
-      thunkAPI.dispatch(updateIsAuthenticated(false));
-      return true;
-    }
-    return false;
+export const logoutUser = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
+  const response = await new AuthRepository().logoutAsync();
+  if (response.success) {
+    localStorage.removeItem(ACCESS_TOKEN_NAME);
+    localStorage.removeItem(REFRESH_TOKEN_NAME);
+    thunkAPI.dispatch(clearAuth());
+    return true;
   }
-);
+  return false;
+});
 
 export const changePassword = createAsyncThunk(
   "auth/changePasswordFirstTime",
@@ -114,11 +134,11 @@ export const changePassword = createAsyncThunk(
     if (response.success) {
       localStorage.removeItem(ACCESS_TOKEN_NAME);
       localStorage.removeItem(REFRESH_TOKEN_NAME);
-      thunkAPI.dispatch(updateIsAuthenticated(false));
+      thunkAPI.dispatch(clearAuth());
       return true;
     }
     return false;
-  }
+  },
 );
 
 export const authSlice = createSlice({
@@ -133,6 +153,7 @@ export const authSlice = createSlice({
       },
     ) {
       state.isAuthenticated = action.payload;
+      state.initialized = true;
       return state;
     },
     setMustChangePassword(
@@ -143,6 +164,22 @@ export const authSlice = createSlice({
       },
     ) {
       state.mustChangePassword = action.payload;
+      state.initialized = true;
+      return state;
+    },
+    setCurrentUser(
+      state,
+      action: {
+        payload: IUser | null;
+        type: string;
+      },
+    ) {
+      state.user = action.payload;
+      return state;
+    },
+    finishAuthInitialization(state) {
+      state.initialized = true;
+      state.initializing = false;
       return state;
     },
     clearAuth(state) {
@@ -150,24 +187,50 @@ export const authSlice = createSlice({
       state.token = "";
       state.isAuthenticated = false;
       state.mustChangePassword = false;
+      state.user = null;
+      state.initialized = true;
+      state.initializing = false;
+      state.userLoading = false;
       return state;
     },
   },
   extraReducers: (builder) => {
+    builder.addCase(initializeAuth.pending, (state) => {
+      state.initializing = true;
+    });
+    builder.addCase(initializeAuth.fulfilled, (state, action) => {
+      state.token = action.payload.token;
+      state.isAuthenticated = action.payload.isAuthenticated;
+      state.initialized = true;
+      state.initializing = false;
+    });
+    builder.addCase(initializeAuth.rejected, (state) => {
+      state.initialized = true;
+      state.initializing = false;
+    });
     builder.addCase(postLogins.pending, (state) => {
       state.loading = true;
     });
     builder.addCase(postLogins.fulfilled, (state) => {
       state.loading = false;
+      state.initialized = true;
     });
     builder.addCase(postLogins.rejected, (state) => {
       state.loading = false;
     });
+    builder.addCase(getMe.pending, (state) => {
+      state.userLoading = true;
+    });
     builder.addCase(getMe.fulfilled, (state, action) => {
       state.user = action.payload;
+      state.userLoading = false;
+    });
+    builder.addCase(getMe.rejected, (state) => {
+      state.userLoading = false;
     });
     builder.addCase(logoutUser.fulfilled, (state) => {
       state.user = null;
+      state.userLoading = false;
     });
     builder.addCase(changePassword.pending, (state) => {
       state.loading = true;
@@ -176,6 +239,7 @@ export const authSlice = createSlice({
       state.loading = false;
       state.user = null;
       state.mustChangePassword = false;
+      state.userLoading = false;
     });
     builder.addCase(changePassword.rejected, (state) => {
       state.loading = false;
@@ -191,5 +255,11 @@ export const clearAuthentication = () => (dispatch: Dispatch) => {
   dispatch(clearAuth());
 };
 
-export const { updateIsAuthenticated, setMustChangePassword, clearAuth } = authSlice.actions;
+export const {
+  updateIsAuthenticated,
+  setMustChangePassword,
+  setCurrentUser,
+  finishAuthInitialization,
+  clearAuth,
+} = authSlice.actions;
 export default authSlice.reducer;

@@ -1,10 +1,4 @@
-import {
-  Calendar,
-  Home,
-  Settings,
-  Train,
-} from "lucide-react";
-
+import { Calendar, Home, Settings, Train, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,46 +11,54 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
 import { Link, useLocation } from "@tanstack/react-router";
 import { NavUser } from "./nav-footer";
-
-// Menu items.
-const items = [
-  {
-    title: "Home",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "Tasks Management",
-    url: "/tasks",
-    icon: Train,
-  },
-  {
-    title: "Drag & Drop",
-    url: "/drag-drop",
-    icon: Calendar,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-  },
-];
-
-
+import { useAppSelector } from "@/app/hooks";
+import { ERole } from "@/app/shared/enums/ERole";
 
 export function AppSidebar() {
   const { pathname } = useLocation();
+  const { user } = useAppSelector((state) => state.auth);
+
+  const items = [
+    {
+      title: "Home",
+      url: "/",
+      icon: Home,
+    },
+    {
+      title: "Tasks Management",
+      url: "/tasks",
+      icon: Train,
+    },
+    ...(user?.role === ERole.Admin
+      ? [
+          {
+            title: "Users Management",
+            url: "/users",
+            icon: Users,
+          },
+        ]
+      : []),
+    {
+      title: "Drag & Drop",
+      url: "/drag-drop",
+      icon: Calendar,
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings,
+    },
+  ];
+
   return (
     <Sidebar>
       <SidebarHeader className="p-0">
-        <div className="px-4 py-4 text-lg font-semibold border-b">
+        <div className="border-b px-4 py-4 text-lg font-semibold">
           Task Management
         </div>
       </SidebarHeader>
-      {/* Content */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>
@@ -67,18 +69,9 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive}>
-                      <Link
-                        to={item.url}
-                        className="flex items-center gap-3 w-full"
-                      >
+                      <Link to={item.url} className="flex w-full items-center gap-3">
                         <item.icon className="size-4" />
-                        <span
-                          style={{
-                            fontWeight: 600,
-                          }}
-                        >
-                          {item.title}
-                        </span>
+                        <span style={{ fontWeight: 600 }}>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -88,10 +81,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      {/* Footer */}
       <SidebarFooter>
         <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
-}   
+}

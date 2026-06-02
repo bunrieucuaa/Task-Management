@@ -8,7 +8,6 @@ export interface IAuth {
 export interface ITokenEntity {
   refreshToken: string;
   accessToken: string;
-  roles: string;
   user: IUser;
   mustChangePassword: boolean;
 }

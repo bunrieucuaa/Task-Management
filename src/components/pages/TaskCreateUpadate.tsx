@@ -1,4 +1,3 @@
-import { FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -6,7 +5,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -31,11 +29,6 @@ interface TaskCreateUpadateProps {
 function TaskCreateUpadate(props: TaskCreateUpadateProps) {
   return (
     <Dialog open={props.isDialogOpen} onOpenChange={props.setIsDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="lg" className="custom-button">
-          <FilePlus className="h-4 w-4" /> Create
-        </Button>
-      </DialogTrigger>
       <DialogContent className="flex max-h-[min(600px,80vh)] flex-col gap-0 p-0 sm:max-w-md">
         <DialogHeader className="contents space-y-0 text-left">
           <DialogTitle className="border-b px-6 py-4">

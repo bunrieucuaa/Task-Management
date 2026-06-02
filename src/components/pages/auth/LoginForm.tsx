@@ -19,35 +19,12 @@ import { postLogins } from "@/redux/authSlice";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
-const MIN_PASSWORD_LENGTH = 8;
-const MAX_PASSWORD_LENGTH = 32;
-
 const formSchema = z.object({
   email: z
     .string()
     .email("Email không hợp lệ")
     .min(1, { message: "Email không được trống" }),
-  password: z
-    .string()
-    .min(1, { message: "Mật khẩu không được trống" }) // Đảm bảo không bị chuỗi rỗng
-    .min(MIN_PASSWORD_LENGTH, {
-      message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`,
-    })
-    .max(MAX_PASSWORD_LENGTH, {
-      message: `Password must not exceed ${MAX_PASSWORD_LENGTH} characters`,
-    })
-    .regex(/[A-Z]/, {
-      message: "Password must contain at least one uppercase letter",
-    })
-    .regex(/[a-z]/, {
-      message: "Password must contain at least one lowercase letter",
-    })
-    .regex(/[0-9]/, {
-      message: "Password must contain at least one number",
-    })
-    .regex(/[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/, {
-      message: "Password must contain at least one special character",
-    }),
+  password: z.string().min(1, { message: "Mật khẩu không được trống" }),
 });
 
 export function LoginForm() {
@@ -77,7 +54,9 @@ export function LoginForm() {
             navigate({ to: "/" });
           }
         } else {
-          toast.error("Tài khoản không có quyền truy cập (Yêu cầu Admin)!", { position: "bottom-right" });
+          toast.error("Tài khoản không hợp lệ hoặc không có quyền truy cập!", {
+            position: "bottom-right",
+          });
         }
       })
       .catch((error) => {
@@ -92,7 +71,7 @@ export function LoginForm() {
       onSubmit={form.handleSubmit(onSubmit)}
     >
       <div className="flex flex-col items-center gap-1 text-center">
-        <h1 className="text-2xl font-bold bg-linear-to-r from-[#22c55e] via-[#60a5fa] to-[#a78bfa] bg-clip-text text-transparent">
+        <h1 className="bg-linear-to-r from-[#22c55e] via-[#60a5fa] to-[#a78bfa] bg-clip-text text-2xl font-bold text-transparent">
           Đăng nhập
         </h1>
       </div>
@@ -123,12 +102,6 @@ export function LoginForm() {
               <FieldLabel htmlFor="form-rhf-login-password">
                 Mật khẩu
               </FieldLabel>
-              {/* <Link
-                to="/reset-password"
-                className="ml-auto text-sm underline-offset-4 hover:underline"
-              >
-                Quên mật khẩu ?
-              </Link> */}
 
               <div className="relative">
                 <Input
