@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { MoreHorizontal, Plus, RefreshCcw } from "lucide-react";
+import { MessageSquare, MoreHorizontal, Plus, RefreshCcw } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +31,7 @@ import type { ITask, ITaskListQuery, IUpdateTaskPayload } from "@/app/entities/t
 import TaskFormDialog, {
   type TaskFormSubmit,
 } from "@/components/pages/tasks/TaskFormDialog";
+import TaskCommentsDialog from "@/components/pages/tasks/TaskCommentsDialog";
 import { fetchMembers, fetchProjects } from "@/redux/projectsSlice";
 import {
   createTask,
@@ -51,6 +52,8 @@ export default function Tasks() {
   const [draft, setDraft] = useState<ITaskListQuery>(initialFilters);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ITask | null>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsTask, setCommentsTask] = useState<ITask | null>(null);
 
   // Load project options once for the picker / filters.
   useEffect(() => {
@@ -106,6 +109,11 @@ export default function Tasks() {
   function openEdit(task: ITask) {
     setEditingTask(task);
     setFormOpen(true);
+  }
+
+  function openComments(task: ITask) {
+    setCommentsTask(task);
+    setCommentsOpen(true);
   }
 
   async function handleSubmitForm(payload: TaskFormSubmit) {
@@ -345,6 +353,9 @@ export default function Tasks() {
                           <DropdownMenuItem disabled={!editable} onClick={() => openEdit(task)}>
                             Chỉnh sửa
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openComments(task)}>
+                            <MessageSquare className="size-4" /> Bình luận
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             variant="destructive"
                             disabled={!canDelete(task) || submitting}
@@ -402,6 +413,12 @@ export default function Tasks() {
           }
         }}
         onSubmit={handleSubmitForm}
+      />
+
+      <TaskCommentsDialog
+        open={commentsOpen}
+        onOpenChange={setCommentsOpen}
+        task={commentsTask}
       />
     </div>
   );
