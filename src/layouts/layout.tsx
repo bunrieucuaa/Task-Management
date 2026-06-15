@@ -17,7 +17,8 @@ import {
   SunIcon,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { useId, useState } from "react";
+import { useId } from "react";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,8 +30,10 @@ import {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const id = useId();
-  const [checked, setChecked] = useState(true);
-  const toggleSwitch = () => setChecked((prev) => !prev);
+  const { theme, setTheme } = useTheme();
+  const checked = theme === "dark";
+  const setChecked = (next: boolean) => setTheme(next ? "dark" : "light");
+  const toggleSwitch = () => setChecked(!checked);
 
   return (
     <SidebarProvider>
@@ -120,7 +123,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="mx-auto size-full flex-1 px-4 py-6 sm:px-6">
-          <Card className="h-250">
+          <Card className="min-h-full">
             <CardContent className="h-full">
               <div className="border-card-foreground/10 h-full rounded-md">
                 {children}

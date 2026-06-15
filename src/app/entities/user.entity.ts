@@ -58,3 +58,15 @@ export interface IUpdateUserProfilePayload {
 export interface IUpdateUserStatusPayload {
   status: EUserStatus;
 }
+
+export interface IUserDirectoryItem {
+  id: number;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  role: ERole;
+}
+
+export interface IUserDirectoryData {
+  users: IUserDirectoryItem[];
+}

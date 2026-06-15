@@ -6,7 +6,6 @@ import {
   REFRESH_TOKEN_NAME,
 } from "../../core/constants";
 import { EResultCode } from "../enums/EResultCode";
-import { decrypt, encrypt } from "./crypto-js";
 
 const TIMEOUT = 1 * 60 * 1000;
 axios.defaults.timeout = TIMEOUT;
@@ -25,11 +24,10 @@ interface RetryConfig extends InternalAxiosRequestConfig {
 }
 
 const onRequestSuccess = (config: InternalAxiosRequestConfig<unknown>) => {
-  const tokenEncode =
+  const token =
     localStorage.getItem(ACCESS_TOKEN_NAME) ||
     sessionStorage.getItem(ACCESS_TOKEN_NAME);
 
-  const token = decrypt(tokenEncode ?? "");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -39,10 +37,9 @@ const onRequestSuccess = (config: InternalAxiosRequestConfig<unknown>) => {
 // Gọi /auth/refresh qua axiosPublic — KHÔNG đi qua interceptor response
 async function callRefreshToken(): Promise<string | null> {
   try {
-    const encryptedRfToken =
+    const refreshToken =
       localStorage.getItem(REFRESH_TOKEN_NAME) ||
       sessionStorage.getItem(REFRESH_TOKEN_NAME);
-    const refreshToken = decrypt(encryptedRfToken ?? "");
 
     if (!refreshToken) {
       console.warn("[Interceptor] Không tìm thấy refresh token trong storage");
@@ -59,10 +56,9 @@ async function callRefreshToken(): Promise<string | null> {
     console.log("[Interceptor] Response refresh:", response.data);
 
     if (response.data?.success && response.data.data?.accessToken) {
-      const newEncryptedToken = encrypt(response.data.data.accessToken);
-      localStorage.setItem(ACCESS_TOKEN_NAME, newEncryptedToken);
+      localStorage.setItem(ACCESS_TOKEN_NAME, response.data.data.accessToken);
       console.log("[Interceptor] Refresh thành công, token mới đã được lưu");
-      return response.data.data.accessToken; // trả về token RAW để gán vào header
+      return response.data.data.accessToken;
     }
     return null;
   } catch (err) {

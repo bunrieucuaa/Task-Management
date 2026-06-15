@@ -6,6 +6,7 @@ import { routeTree } from "./routeTree.gen";
 import { Toaster } from "@/components/ui/sonner";
 import { store } from "@/redux/store";
 import { Provider } from "react-redux";
+import { ThemeProvider } from "next-themes";
 import {
   clearAuthentication,
   finishAuthInitialization,
@@ -36,7 +37,7 @@ declare module "@tanstack/react-router" {
   }
 }
 
-function AuthBootstrap() {
+const AuthBootstrap = () => {
   const dispatch = useAppDispatch();
   const { initialized, initializing } = useAppSelector((state) => state.auth);
 
@@ -62,9 +63,11 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <Provider store={store}>
-        <AuthBootstrap />
-        <RouterProvider router={router} />
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <AuthBootstrap />
+          <RouterProvider router={router} />
+          <Toaster />
+        </ThemeProvider>
       </Provider>
     </StrictMode>,
   );

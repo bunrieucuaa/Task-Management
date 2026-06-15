@@ -1,6 +1,7 @@
 import { useAppSelector } from "@/app/hooks";
 import { hasStoredAuthTokens } from "@/redux/authSlice";
 import { Navigate } from "@tanstack/react-router";
+import FullPageLoader from "@/components/ui/full-page-loader";
 
 export default function MustChangePasswordGuard({
   children,
@@ -12,7 +13,7 @@ export default function MustChangePasswordGuard({
   );
 
   if (!initialized && hasStoredAuthTokens()) {
-    return null;
+    return <FullPageLoader />;
   }
 
   if (!isAuthenticated) {

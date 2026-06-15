@@ -3,7 +3,6 @@ import { AuthRepository } from "@/app/repositories/AuthRepository";
 import { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME } from "@/app/core/constants";
 import { ERole } from "@/app/shared/enums/ERole";
 import { jwtDecode, type JwtPayload } from "jwt-decode";
-import { decrypt, encrypt } from "@/app/shared/config/crypto-js";
 import { isAuthenValidate } from "@/app/shared/config/jwt.extention";
 import type { IUser } from "@/app/entities/user.entity";
 
@@ -24,11 +23,11 @@ const getStoredValue = (key: string) =>
 export const hasStoredAuthTokens = () =>
   !!(getStoredValue(ACCESS_TOKEN_NAME) || getStoredValue(REFRESH_TOKEN_NAME));
 
-const allowedRoles = [ERole.Admin, ERole.Member];
+const allowedRoles = [ERole.Admin, ERole.PM, ERole.Member];
 
 const resolveStoredAuthState = () => {
-  const token = decrypt(getStoredValue(ACCESS_TOKEN_NAME));
-  const storedRefreshToken = decrypt(getStoredValue(REFRESH_TOKEN_NAME));
+  const token = getStoredValue(ACCESS_TOKEN_NAME) ?? "";
+  const storedRefreshToken = getStoredValue(REFRESH_TOKEN_NAME) ?? "";
 
   let isAuthenticated = false;
   if (token) {
@@ -100,10 +99,8 @@ export const postLogins = createAsyncThunk(
       );
 
       if (check) {
-        const accessToken = encrypt(data.accessToken);
-        const refreshToken = encrypt(data.refreshToken);
-        localStorage.setItem(ACCESS_TOKEN_NAME, accessToken);
-        localStorage.setItem(REFRESH_TOKEN_NAME, refreshToken);
+        localStorage.setItem(ACCESS_TOKEN_NAME, data.accessToken);
+        localStorage.setItem(REFRESH_TOKEN_NAME, data.refreshToken);
         thunkAPI.dispatch(updateIsAuthenticated(true));
         thunkAPI.dispatch(setCurrentUser(data.user));
         thunkAPI.dispatch(setMustChangePassword(data.mustChangePassword ?? false));

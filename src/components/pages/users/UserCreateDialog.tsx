@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { AppSelect } from "@/components/ui/app-select";
 import type { ICreateUserPayload } from "@/app/entities/user.entity";
 import { ERole } from "@/app/shared/enums/ERole";
 
@@ -114,14 +115,16 @@ export default function UserCreateDialog({
             render={({ field, fieldState }) => (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Vai trò</label>
-                <select
+                <AppSelect
+                  className="w-full"
                   value={field.value}
-                  onChange={(event) => field.onChange(event.target.value as ERole)}
-                  className="border-input bg-background flex h-9 w-full rounded-md border px-3 py-2 text-sm outline-none"
-                >
-                  <option value={ERole.Member}>MEMBER</option>
-                  <option value={ERole.Admin}>ADMIN</option>
-                </select>
+                  onValueChange={(value) => field.onChange(value as ERole)}
+                  options={[
+                    { value: ERole.Member, label: "MEMBER" },
+                    { value: ERole.PM, label: "PM" },
+                    { value: ERole.Admin, label: "ADMIN" },
+                  ]}
+                />
                 {fieldState.error ? (
                   <p className="text-sm text-destructive">{fieldState.error.message}</p>
                 ) : null}

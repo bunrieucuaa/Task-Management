@@ -2,6 +2,7 @@ import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { getMe, hasStoredAuthTokens } from "@/redux/authSlice";
 import { Navigate, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
+import FullPageLoader from "@/components/ui/full-page-loader";
 
 interface AuthGuardProps {
   isPrivate: boolean;
@@ -27,7 +28,7 @@ const AuthGuard = ({ isPrivate }: AuthGuardProps) => {
   }, [initialized, isAuthenticated, user, mustChangePassword, userLoading, dispatch]);
 
   if (!initialized && hasStoredAuthTokens()) {
-    return null;
+    return <FullPageLoader label="Đang khởi tạo phiên đăng nhập..." />;
   }
 
   return isAuthenticated && isPrivate ? <Outlet /> : <Navigate to="/login" />;

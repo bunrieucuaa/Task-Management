@@ -1,6 +1,7 @@
 import { useAppSelector } from "@/app/hooks";
 import { hasStoredAuthTokens } from "@/redux/authSlice";
 import { Navigate } from "@tanstack/react-router";
+import FullPageLoader from "@/components/ui/full-page-loader";
 
 export default function GuestGuard({ children }: { children: React.ReactNode }) {
   const { initialized, isAuthenticated, mustChangePassword } = useAppSelector(
@@ -8,7 +9,7 @@ export default function GuestGuard({ children }: { children: React.ReactNode }) 
   );
 
   if (!initialized && hasStoredAuthTokens()) {
-    return null;
+    return <FullPageLoader />;
   }
 
   if (isAuthenticated) {

@@ -1,4 +1,4 @@
-import { Calendar, Home, Settings, Train, Users } from "lucide-react";
+import { Calendar, FolderKanban, Home, Settings, Train, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,11 @@ export function AppSidebar() {
       title: "Home",
       url: "/",
       icon: Home,
+    },
+    {
+      title: "Projects",
+      url: "/projects",
+      icon: FolderKanban,
     },
     {
       title: "Tasks Management",

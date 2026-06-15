@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { AppSelect } from "@/components/ui/app-select";
 import {
   Table,
   TableBody,
@@ -20,6 +21,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+/** Sentinel for the "all" filter option (Radix Select forbids value=""). */
+const ALL = "ALL";
 import { ERole } from "@/app/shared/enums/ERole";
 import { EUserStatus } from "@/app/shared/enums/EUserStatus";
 import type { ICreateUserPayload, IUserListQuery } from "@/app/entities/user.entity";
@@ -168,59 +172,60 @@ export default function UsersPage() {
           className="md:col-span-2"
         />
 
-        <select
-          value={draft.role ?? ""}
-          onChange={(event) => handleDraftChange("role", event.target.value as ERole | "")}
-          className="border-input bg-background h-9 rounded-md border px-3 text-sm outline-none"
-        >
-          <option value="">Tất cả role</option>
-          <option value={ERole.Admin}>ADMIN</option>
-          <option value={ERole.Member}>MEMBER</option>
-        </select>
-
-        <select
-          value={draft.status ?? ""}
-          onChange={(event) =>
-            handleDraftChange("status", event.target.value as EUserStatus | "")
+        <AppSelect
+          className="w-full"
+          value={draft.role ? draft.role : ALL}
+          onValueChange={(value) =>
+            handleDraftChange("role", value === ALL ? "" : (value as ERole))
           }
-          className="border-input bg-background h-9 rounded-md border px-3 text-sm outline-none"
-        >
-          <option value="">Tất cả status</option>
-          <option value={EUserStatus.Active}>ACTIVE</option>
-          <option value={EUserStatus.Inactive}>INACTIVE</option>
-          <option value={EUserStatus.Blocked}>BLOCKED</option>
-        </select>
+          options={[
+            { value: ALL, label: "Tất cả role" },
+            { value: ERole.Admin, label: "ADMIN" },
+            { value: ERole.PM, label: "PM" },
+            { value: ERole.Member, label: "MEMBER" },
+          ]}
+        />
 
-        <select
-          value={draft.sortBy}
-          onChange={(event) =>
-            handleDraftChange(
-              "sortBy",
-              event.target.value as IUserListQuery["sortBy"],
-            )
+        <AppSelect
+          className="w-full"
+          value={draft.status ? draft.status : ALL}
+          onValueChange={(value) =>
+            handleDraftChange("status", value === ALL ? "" : (value as EUserStatus))
           }
-          className="border-input bg-background h-9 rounded-md border px-3 text-sm outline-none"
-        >
-          <option value="createdAt">Created At</option>
-          <option value="name">Name</option>
-          <option value="email">Email</option>
-          <option value="role">Role</option>
-          <option value="status">Status</option>
-        </select>
+          options={[
+            { value: ALL, label: "Tất cả status" },
+            { value: EUserStatus.Active, label: "ACTIVE" },
+            { value: EUserStatus.Inactive, label: "INACTIVE" },
+            { value: EUserStatus.Blocked, label: "BLOCKED" },
+          ]}
+        />
 
-        <select
-          value={draft.sortOrder}
-          onChange={(event) =>
-            handleDraftChange(
-              "sortOrder",
-              event.target.value as IUserListQuery["sortOrder"],
-            )
+        <AppSelect
+          className="w-full"
+          value={draft.sortBy ?? "createdAt"}
+          onValueChange={(value) =>
+            handleDraftChange("sortBy", value as IUserListQuery["sortBy"])
           }
-          className="border-input bg-background h-9 rounded-md border px-3 text-sm outline-none"
-        >
-          <option value="desc">DESC</option>
-          <option value="asc">ASC</option>
-        </select>
+          options={[
+            { value: "createdAt", label: "Created At" },
+            { value: "name", label: "Name" },
+            { value: "email", label: "Email" },
+            { value: "role", label: "Role" },
+            { value: "status", label: "Status" },
+          ]}
+        />
+
+        <AppSelect
+          className="w-full"
+          value={draft.sortOrder ?? "desc"}
+          onValueChange={(value) =>
+            handleDraftChange("sortOrder", value as IUserListQuery["sortOrder"])
+          }
+          options={[
+            { value: "desc", label: "DESC" },
+            { value: "asc", label: "ASC" },
+          ]}
+        />
 
         <div className="flex gap-2 md:col-span-6 md:justify-end">
           <Button variant="outline" onClick={handleResetFilters}>

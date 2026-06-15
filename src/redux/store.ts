@@ -1,13 +1,15 @@
 import { configureStore, type Action, type ThunkAction } from "@reduxjs/toolkit";
-import counterReducer from "@/redux/counterSlice";
 import authSlice from "@/redux/authSlice";
 import usersSlice from "@/redux/usersSlice";
+import projectsSlice from "@/redux/projectsSlice";
+import tasksSlice from "@/redux/tasksSlice";
 
 export const store = configureStore({
   reducer: {
-    counter: counterReducer,
     auth: authSlice,
     users: usersSlice,
+    projects: projectsSlice,
+    tasks: tasksSlice,
   },
 });
 

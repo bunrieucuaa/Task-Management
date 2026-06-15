@@ -4,6 +4,7 @@ import type {
   IUpdateUserProfilePayload,
   IUpdateUserStatusPayload,
   IUser,
+  IUserDirectoryData,
   IUserListData,
   IUserListQuery,
   IUserResponseData,
@@ -28,6 +29,13 @@ export class UserRepository extends BaseApiService<IUser> {
 
   async listUsersAsync(query: IUserListQuery) {
     return await this.listWithCountAsync<IUserListData>(query);
+  }
+
+  async getDirectoryAsync() {
+    return await this.getOtherTypeAsync<IUserDirectoryData>({
+      url: `${this.url}/directory`,
+      query: {},
+    });
   }
 
   async getUserByIdAsync(id: string) {
