@@ -49,8 +49,15 @@ import {
 export default function ProjectsPage() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { items, loading, submitting, pagination, members, membersLoading, directory } =
-    useAppSelector((state) => state.projects);
+  const {
+    items,
+    loading,
+    submitting,
+    pagination,
+    members,
+    membersLoading,
+    directory,
+  } = useAppSelector((state) => state.projects);
 
   const isManager = isPrivilegedRole(user?.role);
 
@@ -76,6 +83,7 @@ export default function ProjectsPage() {
   }
 
   // PM is admin-equal on every project; only ADMIN/PM can manage.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const canManage = (_project: IProject) => isManager;
 
   function handleDraftChange<Key extends keyof IProjectListQuery>(
@@ -114,11 +122,16 @@ export default function ProjectsPage() {
       const result = await dispatch(
         updateProject({
           id: String(editingProject.id),
-          data: { name: payload.name, description: payload.description || undefined },
+          data: {
+            name: payload.name,
+            description: payload.description || undefined,
+          },
         }),
       ).unwrap();
       if (result) {
-        toast.success("Cập nhật project thành công!", { position: "bottom-right" });
+        toast.success("Cập nhật project thành công!", {
+          position: "bottom-right",
+        });
         setFormOpen(false);
       }
       return;
@@ -158,7 +171,10 @@ export default function ProjectsPage() {
       return;
     }
     const result = await dispatch(
-      addMember({ id: String(membersProject.id), data: { email: member.email } }),
+      addMember({
+        id: String(membersProject.id),
+        data: { email: member.email },
+      }),
     ).unwrap();
     if (result) {
       toast.success("Đã thêm thành viên!", { position: "bottom-right" });
@@ -183,7 +199,8 @@ export default function ProjectsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Projects</h1>
           <p className="text-sm text-muted-foreground">
-            Quản lý project và thành viên. Bạn chỉ thấy project mình sở hữu hoặc tham gia.
+            Quản lý project và thành viên. Bạn chỉ thấy project mình sở hữu hoặc
+            tham gia.
           </p>
         </div>
         {isManager ? (
@@ -204,7 +221,10 @@ export default function ProjectsPage() {
           className="w-full"
           value={draft.status ? draft.status : ALL}
           onValueChange={(value) =>
-            handleDraftChange("status", value === ALL ? "" : (value as EProjectStatus))
+            handleDraftChange(
+              "status",
+              value === ALL ? "" : (value as EProjectStatus),
+            )
           }
           options={[
             { value: ALL, label: "Tất cả status" },
@@ -229,7 +249,10 @@ export default function ProjectsPage() {
           className="w-full"
           value={draft.sortOrder ?? "desc"}
           onValueChange={(value) =>
-            handleDraftChange("sortOrder", value as IProjectListQuery["sortOrder"])
+            handleDraftChange(
+              "sortOrder",
+              value as IProjectListQuery["sortOrder"],
+            )
           }
           options={[
             { value: "desc", label: "DESC" },
@@ -251,12 +274,11 @@ export default function ProjectsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Tên</TableHead>
-              <TableHead>Owner</TableHead>
-              <TableHead>Thành viên</TableHead>
-              <TableHead>Task</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Cập nhật</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>Người tạo</TableHead>
+              <TableHead>Số Thành viên</TableHead>
+              <TableHead>Trạng thái</TableHead>
+              <TableHead>Ngày Cập nhật</TableHead>
+              <TableHead>Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -275,37 +297,46 @@ export default function ProjectsPage() {
                   <TableRow key={project.id}>
                     <TableCell>
                       <div className="font-medium">{project.name}</div>
-                      {project.description ? (
-                        <div className="max-w-xs truncate text-xs text-muted-foreground">
-                          {project.description}
-                        </div>
-                      ) : null}
                     </TableCell>
-                    <TableCell>{project.owner?.name ?? "—"}</TableCell>
+                    <TableCell className="flex items-center justify-center">
+                      {project.owner?.name ?? "—"}
+                    </TableCell>
                     <TableCell>{project._count?.members ?? 0}</TableCell>
-                    <TableCell>{project._count?.tasks ?? 0}</TableCell>
                     <TableCell>{project.status}</TableCell>
-                    <TableCell>{new Date(project.updatedAt).toLocaleString()}</TableCell>
+                    <TableCell>
+                      {new Date(project.updatedAt).toLocaleString()}
+                    </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="icon-sm" aria-label="Project actions">
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            aria-label="Project actions"
+                          >
                             <MoreHorizontal className="size-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={() => openMembers(project)}>
+                          <DropdownMenuItem
+                            onClick={() => openMembers(project)}
+                          >
                             <Users className="size-4" /> Thành viên
                           </DropdownMenuItem>
                           {manage ? (
                             <>
-                              <DropdownMenuItem onClick={() => openEdit(project)}>
+                              <DropdownMenuItem
+                                onClick={() => openEdit(project)}
+                              >
                                 Chỉnh sửa
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 variant="destructive"
-                                disabled={submitting || project.status === EProjectStatus.Archived}
+                                disabled={
+                                  submitting ||
+                                  project.status === EProjectStatus.Archived
+                                }
                                 onClick={() => handleArchive(project)}
                               >
                                 Lưu trữ
@@ -324,23 +355,35 @@ export default function ProjectsPage() {
 
         <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Trang {pagination.page} / {Math.max(pagination.totalPages, 1)} · Tổng{" "}
-            {pagination.total} project
+            Trang {pagination.page} / {Math.max(pagination.totalPages, 1)} ·
+            Tổng {pagination.total} project
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
               disabled={query.page <= 1 || loading}
-              onClick={() => setQuery((previous) => ({ ...previous, page: previous.page - 1 }))}
+              onClick={() =>
+                setQuery((previous) => ({
+                  ...previous,
+                  page: previous.page - 1,
+                }))
+              }
             >
               Prev
             </Button>
             <Button
               variant="outline"
               disabled={
-                query.page >= pagination.totalPages || loading || pagination.totalPages === 0
+                query.page >= pagination.totalPages ||
+                loading ||
+                pagination.totalPages === 0
               }
-              onClick={() => setQuery((previous) => ({ ...previous, page: previous.page + 1 }))}
+              onClick={() =>
+                setQuery((previous) => ({
+                  ...previous,
+                  page: previous.page + 1,
+                }))
+              }
             >
               Next
             </Button>
