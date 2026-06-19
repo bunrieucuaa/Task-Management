@@ -39,8 +39,11 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
   cho guard redirect) + `sonner`; render bằng `renderWithStore(<Page/>, makeTestStore({ auth, users, ... }))`
   với `auth.user` đúng role. **Page luôn `fetch*` khi mount** → đẩy dữ liệu list qua **repository mock**
   và assert bằng `findBy*`; KHÔNG preload `items` (sẽ bị mount-fetch ghi đè). Xem `UsersPage.spec.tsx`.
+  Page có thể gọi >1 repository (vd `ProjectsPage`: `ProjectRepository` + `UserRepository` cho directory)
+  → mock từng cái. Muốn mở **Radix `DropdownMenu`** (menu hành động trên mỗi row) phải polyfill
+  `HTMLElement.prototype.hasPointerCapture/setPointerCapture/releasePointerCapture` (xem `ProjectsPage.spec.tsx`).
 
-## Đã cover (108 test, 20 file)
+## Đã cover (116 test, 21 file)
 
 | Lớp | File |
 |-----|------|
@@ -64,6 +67,7 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
 | Dialog | `components/pages/users/TemporaryPasswordDialog.spec.tsx` (hiển thị email + mật khẩu tạm, onClose, placeholder) |
 | Dialog | `components/pages/projects/ProjectMembersDialog.spec.tsx` (loại member khỏi danh sách add, filter search, add/remove, ẩn khi không manageable) |
 | Page | `pages/users/UsersPage.spec.tsx` (redirect non-admin, fetch on mount, render rows, empty-state, mở create dialog, search → page 1) |
+| Page | `pages/projects/ProjectsPage.spec.tsx` (fetch on mount + directory manager-only, nút Tạo theo role, render rows, empty-state, search → page 1, mở create + members dialog từ row menu) |
 
 ## Lint — ĐÃ DỌN SẠCH (phiên 4, 2026-06-18)
 

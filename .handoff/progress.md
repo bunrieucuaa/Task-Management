@@ -4,6 +4,12 @@
 
 ## Trạng thái hiện tại
 
+- 2026-06-19 (phiên 6): ✅ Test `ProjectsPage`. Thêm `ProjectsPage.spec.tsx` (8 test): fetch
+  projects on mount + directory chỉ cho manager, ẩn/hiện nút "Tạo project" theo role, render rows
+  (owner + member count), empty-state, search → page 1, mở create dialog, mở members dialog từ
+  row dropdown (gọi `listMembersAsync`). **Tổng: 116 test / 21 file, tất cả PASS**, lint sạch.
+  (Tăng từ 108/20.) Lưu ý: Radix `DropdownMenu` cần polyfill `hasPointerCapture`/`setPointerCapture`/
+  `releasePointerCapture` trong test mới mở được menu (đặt ở `beforeAll` của spec).
 - 2026-06-19 (phiên 5): ✅ Test 2 dialog còn lại + trang đầu tiên. Thêm
   `TemporaryPasswordDialog.spec.tsx` (3 test), `ProjectMembersDialog.spec.tsx` (6 test: lọc
   available, filter search, add/remove, ẩn khi không manageable) và `UsersPage.spec.tsx` (6 test:
@@ -57,10 +63,11 @@
 - ~~Test `ProjectMembersDialog` + `TemporaryPasswordDialog` (2 dialog còn lại)~~ ✅ xong (phiên 5).
   → Mọi dialog giờ đã có test.
 - ~~Test trang `UsersPage`~~ ✅ xong (phiên 5).
-- **(gợi ý kế tiếp)** Test `ProjectsPage` (và trang chi tiết project nơi render tasks — **không có
-  `TasksPage` riêng**, task hiển thị trong project detail). Theo pattern `UsersPage.spec.tsx`: mock
-  router + repository, đẩy dữ liệu qua repo mock, dùng `findBy*`. Cân nhắc bật `coverage` threshold
-  (vd 70%) trong `vitest.config.ts`.
+- ~~Test `ProjectsPage`~~ ✅ xong (phiên 6).
+- **(gợi ý kế tiếp)** Test trang chi tiết project nơi render tasks — **không có `TasksPage` riêng**,
+  task hiển thị trong project detail (xem `src/routes/` để tìm route + component). Theo pattern
+  `ProjectsPage.spec.tsx`: đẩy dữ liệu qua repo mock, `findBy*`, polyfill pointer-capture nếu mở
+  Radix dropdown. Cân nhắc bật `coverage` threshold (vd 70%) trong `vitest.config.ts`.
 
 ## Lệnh nhanh
 
