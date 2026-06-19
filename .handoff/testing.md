@@ -9,10 +9,11 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
 ```
 
 - Runner: **Vitest 3** + **jsdom** + **@testing-library/react** (`vitest.config.ts`).
-- **Coverage threshold (phiên 8):** `coverage.thresholds` = stmts 64 / branch 70 / funcs 42 /
-  lines 64 (floor dưới mức hiện tại; `funcs` ~47% vì nhiều trang phụ/repository chưa test).
-  **CI chạy `npm run test:coverage`** nên ngưỡng được enforce; chạy local `npm run test:coverage`
-  trước khi push. Nâng floor khi thêm test (mục tiêu kéo `functions` lên).
+- **Coverage threshold (phiên 8→9):** `coverage.thresholds` = stmts 72 / branch 75 / funcs 56 /
+  lines 72. Hiện tại ~75/79/61/75 sau khi thêm repository tests + loại file type-only/codegen khỏi
+  coverage (`app/entities/**`, `app/repositories/interfaces/**`, `routes/**`, `redux/store.ts`,
+  `hooks/use-mobile.ts`). **CI chạy `npm run test:coverage`**; chạy local trước khi push. Nâng floor
+  khi thêm test. `coverage/` đã nằm trong eslint ignore + `.gitignore`.
 - Alias `@` → `src` (mirror `vite.config.ts`). KHÔNG nạp plugin TanStack Router khi test.
 - Setup chung: `src/test/setup.ts` (jest-dom matchers, polyfill `matchMedia`/`scrollIntoView`,
   cleanup + clear storage/mocks sau mỗi test). Env `VITE_BASE_API_URL` set sẵn trong config.
@@ -47,7 +48,7 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
   → mock từng cái. Muốn mở **Radix `DropdownMenu`** (menu hành động trên mỗi row) phải polyfill
   `HTMLElement.prototype.hasPointerCapture/setPointerCapture/releasePointerCapture` (xem `ProjectsPage.spec.tsx`).
 
-## Đã cover (124 test, 22 file)
+## Đã cover (150 test, 26 file)
 
 | Lớp | File |
 |-----|------|
@@ -60,6 +61,10 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
 | Slice | `redux/projectsSlice.spec.ts` (CRUD + members add/remove + directory + selection) |
 | Slice | `redux/commentsSlice.spec.ts` (fetch/create/delete + pending reset khi đổi task) |
 | Repo | `app/repositories/AuthRepository.spec.ts` (axios mock + error toast) |
+| Repo | `app/repositories/ProjectRepository.spec.ts` (list/get/create/update/delete + members add/remove, verb+URL+body) |
+| Repo | `app/repositories/TaskRepository.spec.ts` (list/get/create/update/delete) |
+| Repo | `app/repositories/UserRepository.spec.ts` (list/create/directory/get/updateProfile/updateStatus/resetPassword/delete) |
+| Repo | `app/repositories/CommentRepository.spec.ts` (nested /tasks/:id/comments list/create/delete) |
 | Component | `components/pages/auth/LoginForm.spec.tsx` |
 | Component | `components/pages/auth/ChangePasswordForm.spec.tsx` |
 | Guard | `layouts/Guards.spec.tsx` (AuthGuard/GuestGuard/MustChangePasswordGuard: redirect, children/outlet, loader) |

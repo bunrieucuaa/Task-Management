@@ -30,15 +30,23 @@ export default defineConfig({
         'src/main.tsx',
         'src/test/**',
         'src/components/ui/**',
+        // Type-only declarations (interfaces / DTO shapes) — no runtime logic.
+        'src/app/entities/**',
+        'src/app/repositories/interfaces/**',
+        // Codegen-style route registration wrappers (mirror routeTree.gen.ts).
+        'src/routes/**',
+        // Infra wiring / generated shadcn hook — analogous to main.tsx & components/ui.
+        'src/redux/store.ts',
+        'src/hooks/use-mobile.ts',
       ],
-      // Regression floor below current levels (functions is low ~47% — many untested
-      // aux pages/components). Raise as coverage grows; keep under the actual numbers
-      // so CI stays green. Enforced via `test:coverage`.
+      // Regression floor a few points below current (~75% stmts/lines, ~61% funcs after
+      // adding repository tests + excluding type-only/codegen files). Raise as coverage
+      // grows; keep under the actual numbers so CI stays green. Enforced via `test:coverage`.
       thresholds: {
-        statements: 64,
-        branches: 70,
-        functions: 42,
-        lines: 64,
+        statements: 72,
+        branches: 75,
+        functions: 56,
+        lines: 72,
       },
     },
   },

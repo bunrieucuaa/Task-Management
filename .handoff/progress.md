@@ -4,6 +4,14 @@
 
 ## Trạng thái hiện tại
 
+- 2026-06-19 (phiên 9): ✅ **Kéo functions coverage lên**. Thêm 4 repository spec (26 test):
+  `ProjectRepository` (9), `TaskRepository` (5), `UserRepository` (8), `CommentRepository` (4) —
+  mock `axios` + `sonner` theo pattern `AuthRepository.spec.ts`, assert verb/URL/body. Việc này
+  cover sâu `BaseApiService` + `BaseApiDataSource` (nhiều hàm CRUD). Đồng thời **loại file type-only/
+  codegen** khỏi coverage (entities, repositories/interfaces, routes, `redux/store.ts`,
+  `hooks/use-mobile.ts`) và thêm `coverage` vào eslint ignore. **Functions 47.45% → 60.83%**
+  (stmts/lines 68.8 → 75.3, branch 75.5 → 79.3). Nâng floor: **72/75/56/72**. **Tổng: 150 test /
+  26 file, tất cả PASS**, lint sạch, `test:coverage` exit 0. (Tăng từ 124/22.)
 - 2026-06-19 (phiên 8): ✅ **Bật coverage threshold**. Thêm `coverage.thresholds` vào
   `vitest.config.ts` (floor: stmts 64 / branch 70 / **funcs 42** / lines 64) và đổi bước test
   trong CI sang `npm run test:coverage`. `funcs` thấp (~47%) vì nhiều trang phụ/aux chưa test
@@ -81,9 +89,11 @@
   → **Mọi trang chính (`UsersPage`, `ProjectsPage`, `Tasks`) đã có test.**
 - ~~Sửa bug BE `verifyToken`~~ ✅ xong (BE phiên 6). ~~Bật `coverage` threshold đồng bộ FE + BE~~
   ✅ xong (FE phiên 8 / BE phiên 7).
-- **(gợi ý kế tiếp)** Tăng coverage `functions` (đang ~47%): test `HomePage`/`AccountPage`, các
-  trang auth (`reset-password`, `register`) và repository chưa cover → rồi **nâng dần floor** trong
-  `vitest.config.ts`. Cân nhắc DB integration test thật (Testcontainers) ở BE.
+- ~~Tăng coverage `functions` qua repository tests~~ ✅ xong (phiên 9) — funcs 47→61%, floor 56.
+- **(gợi ý kế tiếp)** Đẩy `functions` cao hơn nữa: test các trang còn 0% — `AccountPage`,
+  `Register`, `ResetPassword`, `HomePage`, `layout.tsx`/`SplitLayout`, và các handler chưa cover
+  trong `Tasks`/`ProjectsPage`/`UsersPage` (delete + confirm, pagination Prev/Next, quick-update).
+  Rồi nâng floor tiếp. Cân nhắc DB integration test thật (Testcontainers) ở BE.
 
 ## Lệnh nhanh
 
