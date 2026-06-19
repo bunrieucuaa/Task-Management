@@ -31,6 +31,15 @@ export default defineConfig({
         'src/test/**',
         'src/components/ui/**',
       ],
+      // Regression floor below current levels (functions is low ~47% — many untested
+      // aux pages/components). Raise as coverage grows; keep under the actual numbers
+      // so CI stays green. Enforced via `test:coverage`.
+      thresholds: {
+        statements: 64,
+        branches: 70,
+        functions: 42,
+        lines: 64,
+      },
     },
   },
 });

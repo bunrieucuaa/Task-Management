@@ -9,6 +9,10 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
 ```
 
 - Runner: **Vitest 3** + **jsdom** + **@testing-library/react** (`vitest.config.ts`).
+- **Coverage threshold (phiên 8):** `coverage.thresholds` = stmts 64 / branch 70 / funcs 42 /
+  lines 64 (floor dưới mức hiện tại; `funcs` ~47% vì nhiều trang phụ/repository chưa test).
+  **CI chạy `npm run test:coverage`** nên ngưỡng được enforce; chạy local `npm run test:coverage`
+  trước khi push. Nâng floor khi thêm test (mục tiêu kéo `functions` lên).
 - Alias `@` → `src` (mirror `vite.config.ts`). KHÔNG nạp plugin TanStack Router khi test.
 - Setup chung: `src/test/setup.ts` (jest-dom matchers, polyfill `matchMedia`/`scrollIntoView`,
   cleanup + clear storage/mocks sau mỗi test). Env `VITE_BASE_API_URL` set sẵn trong config.

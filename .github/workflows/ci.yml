@@ -36,5 +36,5 @@ jobs:
       - name: Build (vite + tsc)
         run: npm run build
 
-      - name: Run tests
-        run: npm test
+      - name: Run tests (with coverage thresholds)
+        run: npm run test:coverage

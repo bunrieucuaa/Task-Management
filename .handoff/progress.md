@@ -4,6 +4,11 @@
 
 ## Trạng thái hiện tại
 
+- 2026-06-19 (phiên 8): ✅ **Bật coverage threshold**. Thêm `coverage.thresholds` vào
+  `vitest.config.ts` (floor: stmts 64 / branch 70 / **funcs 42** / lines 64) và đổi bước test
+  trong CI sang `npm run test:coverage`. `funcs` thấp (~47%) vì nhiều trang phụ/aux chưa test
+  (HomePage, AccountPage, auth pages, layouts, vài repository). Coverage hiện tại: **68.84% stmts /
+  75.47% branch / 47.45% funcs / 68.84% lines**, exit 0. Floor đặt dưới mức thực tế để CI không đỏ.
 - 2026-06-19 (phiên 7): ✅ Test trang **Tasks** (`src/pages/Tasks.tsx`, route `/(app)/tasks`).
   Thêm `Tasks.spec.tsx` (8 test): load tasks + project options on mount, render rows (project +
   assignee), empty-state, search → page 1, mở create dialog, mở comments dialog từ row menu (gọi
@@ -74,10 +79,11 @@
 - ~~Test `ProjectsPage`~~ ✅ xong (phiên 6).
 - ~~Test trang Tasks~~ ✅ xong (phiên 7) — `src/pages/Tasks.tsx` (route `/(app)/tasks`).
   → **Mọi trang chính (`UsersPage`, `ProjectsPage`, `Tasks`) đã có test.**
-- **(gợi ý kế tiếp)** (a) Sửa bug BE `verifyToken` nuốt `TokenExpiredError` → trả đúng message
-  `"Token has expired"` (xem `task-be/.handoff/testing.md` mục Quirk). (b) Bật `coverage` threshold
-  (vd 70%) đồng bộ FE + BE trong `vitest.config.ts`. (c) Có thể thêm test cho `HomePage`/`AccountPage`
-  nếu muốn phủ nốt các trang phụ.
+- ~~Sửa bug BE `verifyToken`~~ ✅ xong (BE phiên 6). ~~Bật `coverage` threshold đồng bộ FE + BE~~
+  ✅ xong (FE phiên 8 / BE phiên 7).
+- **(gợi ý kế tiếp)** Tăng coverage `functions` (đang ~47%): test `HomePage`/`AccountPage`, các
+  trang auth (`reset-password`, `register`) và repository chưa cover → rồi **nâng dần floor** trong
+  `vitest.config.ts`. Cân nhắc DB integration test thật (Testcontainers) ở BE.
 
 ## Lệnh nhanh
 
