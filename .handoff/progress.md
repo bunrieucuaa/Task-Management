@@ -2,6 +2,40 @@
 
 > Cập nhật file này cuối mỗi phiên. Mục quan trọng nhất: **Trạng thái hiện tại** + **Việc kế tiếp**.
 
+## 🚀 CHUẨN BỊ DEPLOY — việc cần làm (chốt 2026-06-19, làm trong chat MỚI)
+
+> Hướng deploy đã chốt: **PaaS** — FE lên **Vercel/Netlify**, BE lên **Render/Railway** + **managed
+> Postgres**. Test hiện tại coi như ĐỦ; không cần thêm test, tập trung fix dưới đây rồi deploy.
+> Phạm vi đã chốt với user: **P0 + P1** (hoãn P2). Audit đầy đủ ở cả 2 repo (`task-be/.handoff/`).
+
+### P0 — Bug chặn (FE)
+- [ ] **`src/pages/HomePage.tsx` đang là placeholder** `<div>HomePage 123</div>` — đây là trang chủ
+  sau đăng nhập (route `src/routes/(app)/index.tsx`). Phải thay bằng dashboard/landing tử tế.
+  **Mức độ CHƯA chốt** — user để mình đề xuất. Gợi ý: **dashboard số liệu** (đếm project/task của
+  tôi, task theo status, task sắp tới hạn) dùng `ProjectRepository`/`TaskRepository` sẵn có; nếu gấp
+  thì landing đơn giản (chào theo tên user + nút điều hướng Projects/Tasks/Account). → Hỏi user chốt
+  mức rồi làm. Nhớ thêm test `HomePage.spec.tsx` (đang 0% coverage).
+- [ ] (Bug P0 phía BE: PM bị khoá khỏi app do `/auth/me` — xem `task-be/.handoff/progress.md`. FE
+  không cần sửa, nhưng đây là lý do PM hiện không đăng nhập được; test lại luồng PM sau khi BE fix.)
+
+### P1 — Dọn cho production (FE)
+- [ ] **Bỏ debug log trong `src/app/shared/config/axios-interceptor.ts`** (4 `console.log` ~dòng
+  49/56/60/75). Đặc biệt dòng `console.log("[Interceptor] Response refresh:", response.data)` **log
+  cả nội dung refresh token** → rủi ro lộ thông tin. Bỏ hết hoặc guard `if (import.meta.env.DEV)`.
+
+### Cấu hình deploy FE (Vercel/Netlify)
+- Build command: `npm run build` (chạy `vite build && tsc -b`), output dir: `dist`.
+- Env: đặt **`VITE_BASE_API_URL`** = URL BE production (vd `https://<be>.onrender.com/api/v1`).
+- **SPA fallback bắt buộc** (TanStack Router client-side): rewrite mọi route → `/index.html`
+  (Vercel: `vercel.json` rewrites; Netlify: `_redirects` `/* /index.html 200`). Chưa có file này.
+- Sau khi có URL FE → cập nhật **`CORS_ORIGIN`** ở BE cho khớp.
+
+### P2 — HOÃN (có trong DB schema nhưng chưa implement)
+AI features (`AiHistory`), Task attachments (upload file — `postWithFile` có sẵn chưa dùng),
+Tags/TaskTag, ActivityLog. Feature lớn → để sau khi deploy xong bản chạy được.
+
+---
+
 ## Trạng thái hiện tại
 
 - 2026-06-19 (phiên 9): ✅ **Kéo functions coverage lên**. Thêm 4 repository spec (26 test):
