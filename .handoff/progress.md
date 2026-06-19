@@ -4,6 +4,14 @@
 
 ## Trạng thái hiện tại
 
+- 2026-06-19 (phiên 5): ✅ Test 2 dialog còn lại + trang đầu tiên. Thêm
+  `TemporaryPasswordDialog.spec.tsx` (3 test), `ProjectMembersDialog.spec.tsx` (6 test: lọc
+  available, filter search, add/remove, ẩn khi không manageable) và `UsersPage.spec.tsx` (6 test:
+  redirect non-admin, fetch on mount, render rows, empty-state, mở create dialog, search → page 1).
+  **Tổng: 108 test / 20 file, tất cả PASS**, lint sạch, build OK. (Tăng từ 93/17.)
+  Lưu ý pattern test page: page **luôn refetch khi mount** nên dữ liệu rows phải đẩy qua repository
+  mock + `findBy*` (preloaded `items` sẽ bị ghi đè); mock `@tanstack/react-router` (`useNavigate` +
+  `Navigate`) và `sonner`.
 - 2026-06-18 (phiên 4): ✅ Test dialog + interceptor + **dọn sạch nợ lint, bật lint chặn CI**.
   Thêm `axios-interceptor.spec.tsx` (6 test: refresh 401 một lần, logout khi fail, 403 handling)
   và test 4 dialog: `UserCreateDialog`, `ProjectFormDialog`, `TaskFormDialog`, `TaskCommentsDialog`
@@ -46,10 +54,13 @@
   `TaskCommentsDialog`)~~ ✅ xong (phiên 4).
 - ~~Test `axios-interceptor` (refresh-token flow)~~ ✅ xong (phiên 4).
 - ~~Dọn nợ lint app + bật lint chặn CI~~ ✅ xong (phiên 4) — `npm run lint` sạch.
-- **(gợi ý kế tiếp)** Test trang chính (`ProjectsPage`, `TasksPage`, `UsersPage`): mock
-  repository, render với store, kiểm tra filter/pagination + mở dialog. Cân nhắc bật
-  `coverage` threshold (vd 70%) trong `vitest.config.ts`. Có thể thêm test cho `ProjectMembersDialog`
-  và `TemporaryPasswordDialog` (2 dialog còn lại chưa cover).
+- ~~Test `ProjectMembersDialog` + `TemporaryPasswordDialog` (2 dialog còn lại)~~ ✅ xong (phiên 5).
+  → Mọi dialog giờ đã có test.
+- ~~Test trang `UsersPage`~~ ✅ xong (phiên 5).
+- **(gợi ý kế tiếp)** Test `ProjectsPage` (và trang chi tiết project nơi render tasks — **không có
+  `TasksPage` riêng**, task hiển thị trong project detail). Theo pattern `UsersPage.spec.tsx`: mock
+  router + repository, đẩy dữ liệu qua repo mock, dùng `findBy*`. Cân nhắc bật `coverage` threshold
+  (vd 70%) trong `vitest.config.ts`.
 
 ## Lệnh nhanh
 

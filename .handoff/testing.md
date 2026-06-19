@@ -33,9 +33,14 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
   và body request, và nhánh `processError` (toast khi lỗi).
 - **Component** (`*.spec.tsx`): mock `@tanstack/react-router` (`useNavigate`/`Link`), `sonner`,
   `AuthRepository`, và `jwt-decode` khi cần; render bằng `renderWithStore`; dùng `userEvent` +
-  `findByText` cho validation/submit.
+  `findByText` cho validation/submit. Dialog thuần (presentational) thì render thẳng (`render`),
+  truyền props giả (xem `ProjectMembersDialog.spec.tsx`).
+- **Page** (`pages/**/*.spec.tsx`): mock `@tanstack/react-router` (cả `useNavigate` lẫn `Navigate`
+  cho guard redirect) + `sonner`; render bằng `renderWithStore(<Page/>, makeTestStore({ auth, users, ... }))`
+  với `auth.user` đúng role. **Page luôn `fetch*` khi mount** → đẩy dữ liệu list qua **repository mock**
+  và assert bằng `findBy*`; KHÔNG preload `items` (sẽ bị mount-fetch ghi đè). Xem `UsersPage.spec.tsx`.
 
-## Đã cover (93 test, 17 file)
+## Đã cover (108 test, 20 file)
 
 | Lớp | File |
 |-----|------|
@@ -56,6 +61,9 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
 | Dialog | `components/pages/projects/ProjectFormDialog.spec.tsx` (create/edit, member picker) |
 | Dialog | `components/pages/tasks/TaskFormDialog.spec.tsx` (create/edit, require project, normalize) |
 | Dialog | `components/pages/tasks/TaskCommentsDialog.spec.tsx` (fetch/submit qua repository mock) |
+| Dialog | `components/pages/users/TemporaryPasswordDialog.spec.tsx` (hiển thị email + mật khẩu tạm, onClose, placeholder) |
+| Dialog | `components/pages/projects/ProjectMembersDialog.spec.tsx` (loại member khỏi danh sách add, filter search, add/remove, ẩn khi không manageable) |
+| Page | `pages/users/UsersPage.spec.tsx` (redirect non-admin, fetch on mount, render rows, empty-state, mở create dialog, search → page 1) |
 
 ## Lint — ĐÃ DỌN SẠCH (phiên 4, 2026-06-18)
 
