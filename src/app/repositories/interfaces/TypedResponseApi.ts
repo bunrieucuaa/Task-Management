@@ -3,7 +3,7 @@ import type { EResultCode } from "@/app/shared/enums/EResultCode";
 export interface TypedResponseApi<T> {
   success: boolean;
   resultCode: EResultCode;
-  message: any;
+  message: unknown;
   validationErrors: string[];
   data: T;
   error?: string;

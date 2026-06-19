@@ -2,6 +2,8 @@ export enum EResultCode {
   GET = 200,
   CREATE = 201,
   UPDATE = 204,
+  // DELETE intentionally maps to HTTP 200 (same as GET) — these are status codes, not unique ids.
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   DELETE = 200,
   NOTFOUND = 404,
   UNAUTHORIZED = 401, // ko có quyền truy cập - chưa được xác thực

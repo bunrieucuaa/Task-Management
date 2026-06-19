@@ -55,6 +55,8 @@ export default function TaskCommentsDialog({
     }
     if (!open) {
       dispatch(clearComments());
+      // Intentional: clear the draft when the dialog closes.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setContent("");
     }
   }, [open, task, dispatch]);

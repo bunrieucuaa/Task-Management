@@ -11,35 +11,35 @@ const processError = <T>(error: AxiosError): T => {
   return (response?.data ?? {}) as T;
 };
 
-const responseBody = <T>(res: AxiosResponse<any>): T => res.data as T;
+const responseBody = <T>(res: AxiosResponse<unknown>): T => res.data as T;
 
 const BaseApiDataSource = {
-  get: <T>(url: string, params?: Object) => {
+  get: <T>(url: string, params?: object) => {
     return axios
       .get(url, { params })
       .then((response) => responseBody<T>(response))
       .catch((error: AxiosError) => processError<T>(error));
   },
 
-  post: <T>(url: string, data: any) =>
+  post: <T>(url: string, data: unknown) =>
     axios
       .post(url, data)
       .then((response) => responseBody<T>(response))
       .catch((error: AxiosError) => processError<T>(error)),
 
-  put: <T>(url: string, data: any) =>
+  put: <T>(url: string, data: unknown) =>
     axios
       .put(url, data)
       .then((response) => responseBody<T>(response))
       .catch((error: AxiosError) => processError<T>(error)),
 
-  patch: <T>(url: string, data: any) =>
+  patch: <T>(url: string, data: unknown) =>
     axios
       .patch(url, data)
       .then((response) => responseBody<T>(response))
       .catch((error: AxiosError) => processError<T>(error)),
 
-  putStatusCode204: <T>(url: string, data: any) =>
+  putStatusCode204: <T>(url: string, data: unknown) =>
     axios
       .put(url, data)
       .then((response) => response)
@@ -51,7 +51,7 @@ const BaseApiDataSource = {
       .then((response) => responseBody<T>(response))
       .catch((error: AxiosError) => processError<T>(error)),
 
-  postWithFile: <T>(url: string, data: any) =>
+  postWithFile: <T>(url: string, data: unknown) =>
     axios
       .post(url, data, {
         headers: {

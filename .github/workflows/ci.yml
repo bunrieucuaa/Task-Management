@@ -28,12 +28,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Lint is non-blocking: the repo has pre-existing lint debt in app code
-      # (shadcn/ui files, a few pages/dialogs). Test files are lint-clean. Flip
-      # this to a blocking step once that debt is cleared.
-      - name: Lint (non-blocking)
+      # Lint debt cleared (2026-06-18): app code fixed, generated shadcn/ui +
+      # entry point scoped out in eslint.config.js. Lint is now a blocking gate.
+      - name: Lint
         run: npm run lint
-        continue-on-error: true
 
       - name: Build (vite + tsc)
         run: npm run build

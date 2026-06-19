@@ -77,6 +77,8 @@ export default function ProjectFormDialog({
         name: project?.name ?? "",
         description: project?.description ?? "",
       });
+      // Intentional: reset local picker state when the dialog (re)opens.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedIds([]);
       setSearch("");
     }

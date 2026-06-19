@@ -35,7 +35,7 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
   `AuthRepository`, và `jwt-decode` khi cần; render bằng `renderWithStore`; dùng `userEvent` +
   `findByText` cho validation/submit.
 
-## Đã cover (73 test, 12 file)
+## Đã cover (93 test, 17 file)
 
 | Lớp | File |
 |-----|------|
@@ -51,14 +51,23 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
 | Component | `components/pages/auth/LoginForm.spec.tsx` |
 | Component | `components/pages/auth/ChangePasswordForm.spec.tsx` |
 | Guard | `layouts/Guards.spec.tsx` (AuthGuard/GuestGuard/MustChangePasswordGuard: redirect, children/outlet, loader) |
+| Config | `app/shared/config/axios-interceptor.spec.ts` (401 refresh một lần + retry, logout khi fail, 403 handling) |
+| Dialog | `components/pages/users/UserCreateDialog.spec.tsx` (validation + submit) |
+| Dialog | `components/pages/projects/ProjectFormDialog.spec.tsx` (create/edit, member picker) |
+| Dialog | `components/pages/tasks/TaskFormDialog.spec.tsx` (create/edit, require project, normalize) |
+| Dialog | `components/pages/tasks/TaskCommentsDialog.spec.tsx` (fetch/submit qua repository mock) |
 
-## Lint — NỢ KỸ THUẬT CÓ SẴN (không do test)
+## Lint — ĐÃ DỌN SẠCH (phiên 4, 2026-06-18)
 
-`npm run lint` hiện **đỏ sẵn từ trước** (~12 lỗi trong code app: `components/ui/sidebar.tsx`,
-`button.tsx`, `main.tsx`, `pages/projects/ProjectsPage.tsx`, vài dialog, `BaseApiDataSource.ts`...).
-Các file test mới **đã lint sạch**. Vì lint đỏ sẵn, CI để bước lint **không chặn**
-(`continue-on-error`); cổng chặn thật là **build (tsc) + test**. Khi dọn xong nợ lint, có thể
-bật lint thành bước chặn.
+`npm run lint` hiện **sạch** và là **bước chặn** trong CI. Cách đã xử lý 15 lỗi cũ:
+- App code sửa thật: `BaseApiDataSource.ts` (`any`→`unknown`, `Object`→`object`),
+  `TypedResponseApi.ts` (`message: unknown`), `EResultCode.ts` (disable
+  `no-duplicate-enum-values` cho `DELETE = 200` — là HTTP code, cố ý), 2 chỗ
+  `set-state-in-effect` (reset form khi mở/đóng dialog — cố ý, disable theo dòng).
+- File generated/đặc thù: thêm override trong `eslint.config.js` cho
+  `src/components/ui/**` + `src/main.tsx` → tắt `react-refresh/only-export-components`
+  và `react-hooks/purity` (skeleton dùng `Math.random`).
+- Khi thêm rule mới mà generated UI vi phạm → mở rộng override thay vì sửa file shadcn.
 
 ## Khi thêm test component phức tạp hơn
 

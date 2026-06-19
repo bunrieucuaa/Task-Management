@@ -20,4 +20,14 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Generated shadcn/ui primitives and the app entry point: the fast-refresh
+    // "only export components" rule and the skeleton's Math.random width don't
+    // apply meaningfully here.
+    files: ['src/components/ui/**/*.{ts,tsx}', 'src/main.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      'react-hooks/purity': 'off',
+    },
+  },
 ])
