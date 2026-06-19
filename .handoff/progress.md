@@ -4,6 +4,14 @@
 
 ## Trạng thái hiện tại
 
+- 2026-06-19 (phiên 7): ✅ Test trang **Tasks** (`src/pages/Tasks.tsx`, route `/(app)/tasks`).
+  Thêm `Tasks.spec.tsx` (8 test): load tasks + project options on mount, render rows (project +
+  assignee), empty-state, search → page 1, mở create dialog, mở comments dialog từ row menu (gọi
+  `listCommentsAsync`), và **phân quyền row menu** (member không phải creator/assignee → "Chỉnh sửa"/
+  "Xoá" `aria-disabled`; admin thì không). **Tổng: 124 test / 22 file, tất cả PASS**, lint sạch.
+  (Tăng từ 116/21.)
+  ⚠️ **Đính chính phiên 5/6:** *có* trang Tasks riêng — file tên `src/pages/Tasks.tsx` (component
+  `Tasks`, không có hậu tố "Page" nên glob cũ không thấy). Mọi trang chính giờ đã có test.
 - 2026-06-19 (phiên 6): ✅ Test `ProjectsPage`. Thêm `ProjectsPage.spec.tsx` (8 test): fetch
   projects on mount + directory chỉ cho manager, ẩn/hiện nút "Tạo project" theo role, render rows
   (owner + member count), empty-state, search → page 1, mở create dialog, mở members dialog từ
@@ -64,10 +72,12 @@
   → Mọi dialog giờ đã có test.
 - ~~Test trang `UsersPage`~~ ✅ xong (phiên 5).
 - ~~Test `ProjectsPage`~~ ✅ xong (phiên 6).
-- **(gợi ý kế tiếp)** Test trang chi tiết project nơi render tasks — **không có `TasksPage` riêng**,
-  task hiển thị trong project detail (xem `src/routes/` để tìm route + component). Theo pattern
-  `ProjectsPage.spec.tsx`: đẩy dữ liệu qua repo mock, `findBy*`, polyfill pointer-capture nếu mở
-  Radix dropdown. Cân nhắc bật `coverage` threshold (vd 70%) trong `vitest.config.ts`.
+- ~~Test trang Tasks~~ ✅ xong (phiên 7) — `src/pages/Tasks.tsx` (route `/(app)/tasks`).
+  → **Mọi trang chính (`UsersPage`, `ProjectsPage`, `Tasks`) đã có test.**
+- **(gợi ý kế tiếp)** (a) Sửa bug BE `verifyToken` nuốt `TokenExpiredError` → trả đúng message
+  `"Token has expired"` (xem `task-be/.handoff/testing.md` mục Quirk). (b) Bật `coverage` threshold
+  (vd 70%) đồng bộ FE + BE trong `vitest.config.ts`. (c) Có thể thêm test cho `HomePage`/`AccountPage`
+  nếu muốn phủ nốt các trang phụ.
 
 ## Lệnh nhanh
 

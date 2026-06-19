@@ -43,7 +43,7 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
   → mock từng cái. Muốn mở **Radix `DropdownMenu`** (menu hành động trên mỗi row) phải polyfill
   `HTMLElement.prototype.hasPointerCapture/setPointerCapture/releasePointerCapture` (xem `ProjectsPage.spec.tsx`).
 
-## Đã cover (116 test, 21 file)
+## Đã cover (124 test, 22 file)
 
 | Lớp | File |
 |-----|------|
@@ -68,6 +68,7 @@ npm run test:coverage # kèm coverage (v8) → ./coverage
 | Dialog | `components/pages/projects/ProjectMembersDialog.spec.tsx` (loại member khỏi danh sách add, filter search, add/remove, ẩn khi không manageable) |
 | Page | `pages/users/UsersPage.spec.tsx` (redirect non-admin, fetch on mount, render rows, empty-state, mở create dialog, search → page 1) |
 | Page | `pages/projects/ProjectsPage.spec.tsx` (fetch on mount + directory manager-only, nút Tạo theo role, render rows, empty-state, search → page 1, mở create + members dialog từ row menu) |
+| Page | `pages/Tasks.spec.tsx` (load tasks + project options on mount, render rows, empty-state, search → page 1, mở create + comments dialog từ row menu, phân quyền edit/xoá theo creator/assignee/admin) |
 
 ## Lint — ĐÃ DỌN SẠCH (phiên 4, 2026-06-18)
 
