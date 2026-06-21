@@ -46,18 +46,13 @@ async function callRefreshToken(): Promise<string | null> {
       return null;
     }
 
-    console.log("[Interceptor] Đang gọi /auth/refresh...");
-
     const response = await axiosPublic.post<{
       success: boolean;
       data: { accessToken: string };
     }>("/auth/refresh", { refreshToken });
 
-    console.log("[Interceptor] Response refresh:", response.data);
-
     if (response.data?.success && response.data.data?.accessToken) {
       localStorage.setItem(ACCESS_TOKEN_NAME, response.data.data.accessToken);
-      console.log("[Interceptor] Refresh thành công, token mới đã được lưu");
       return response.data.data.accessToken;
     }
     return null;
@@ -71,8 +66,6 @@ const setupAxiosInterceptors = (onUnauthenticated: () => void) => {
   const onResponseError = async (err: AxiosError) => {
     const status = err.response?.status || err.status;
     const config = err.config as RetryConfig | undefined;
-
-    console.log("[Interceptor] Response error status:", status, "| _retry:", config?._retry);
 
     // Chỉ thử refresh một lần — nếu config đã có _retry=true thì bỏ qua
     if (status === Number(EResultCode.UNAUTHORIZED) && config && !config._retry) {

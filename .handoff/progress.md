@@ -8,8 +8,12 @@
 > Postgres**. Test hiện tại coi như ĐỦ; không cần thêm test, tập trung fix dưới đây rồi deploy.
 > Phạm vi đã chốt với user: **P0 + P1** (hoãn P2). Audit đầy đủ ở cả 2 repo (`task-be/.handoff/`).
 
+> ✅ **ĐÃ LÀM XONG P0 + P1 + cấu hình deploy (phiên 10, 2026-06-19).** Xem "Trạng thái hiện tại".
+> Việc còn lại chỉ là **vận hành**: deploy FE (Vercel/Netlify), đặt `VITE_BASE_API_URL` = URL BE thật,
+> rồi báo URL FE để BE đặt `CORS_ORIGIN`.
+
 ### P0 — Bug chặn (FE)
-- [ ] **`src/pages/HomePage.tsx` đang là placeholder** `<div>HomePage 123</div>` — đây là trang chủ
+- [x] **`src/pages/HomePage.tsx` đang là placeholder** `<div>HomePage 123</div>` — đây là trang chủ
   sau đăng nhập (route `src/routes/(app)/index.tsx`). Phải thay bằng dashboard/landing tử tế.
   **Mức độ CHƯA chốt** — user để mình đề xuất. Gợi ý: **dashboard số liệu** (đếm project/task của
   tôi, task theo status, task sắp tới hạn) dùng `ProjectRepository`/`TaskRepository` sẵn có; nếu gấp
@@ -19,7 +23,7 @@
   không cần sửa, nhưng đây là lý do PM hiện không đăng nhập được; test lại luồng PM sau khi BE fix.)
 
 ### P1 — Dọn cho production (FE)
-- [ ] **Bỏ debug log trong `src/app/shared/config/axios-interceptor.ts`** (4 `console.log` ~dòng
+- [x] **Bỏ debug log trong `src/app/shared/config/axios-interceptor.ts`** (4 `console.log` ~dòng
   49/56/60/75). Đặc biệt dòng `console.log("[Interceptor] Response refresh:", response.data)` **log
   cả nội dung refresh token** → rủi ro lộ thông tin. Bỏ hết hoặc guard `if (import.meta.env.DEV)`.
 
@@ -38,6 +42,25 @@ Tags/TaskTag, ActivityLog. Feature lớn → để sau khi deploy xong bản ch�
 
 ## Trạng thái hiện tại
 
+- 2026-06-19 (phiên 10): ✅ **CHUẨN BỊ DEPLOY — P0 + P1 + cấu hình (FE).**
+  - **P0 (TDD):** thay placeholder `HomePage` bằng **dashboard số liệu** (mức "dashboard" — quyết định
+    theo autonomy preference của user). Gồm: lời chào theo tên user; 5 thẻ thống kê (Dự án / Tổng task
+    — từ `pagination.total`; To Do / In Progress / Done — đếm từ `tasks.items`); danh sách **Task sắp
+    tới hạn** (lọc task chưa Done/Cancelled, deadline ≥ now, sort tăng dần, lấy 5). Thẻ "Dự án"/"Tổng
+    task" là `Link` tới `/projects`, `/tasks`. Dùng redux thunks `fetchProjects` (limit 1, chỉ lấy
+    total) + `fetchTasks` (limit 100). Viết test ĐỎ trước (`HomePage.spec.tsx`, 6 test) rồi mới
+    implement. **HomePage coverage 98%.**
+  - **P1:** xoá 4 `console.log` debug trong `axios-interceptor.ts` (gồm dòng log nội dung refresh
+    token — rủi ro lộ thông tin). Giữ `console.warn`/`console.error` hợp lệ.
+  - **Cấu hình deploy:** thêm **`vercel.json`** (buildCommand/outputDir + SPA rewrites → `/index.html`)
+    và **`public/_redirects`** (`/* /index.html 200` cho Netlify, Vite copy vào `dist/` — đã kiểm).
+    Thêm comment hướng dẫn `VITE_BASE_API_URL` vào `.env.example`.
+  - **Kiểm chứng:** `npm run test:coverage` **156 PASS** (tăng từ 150), thresholds exit 0;
+    `npm run lint` sạch (sửa `Date.now()` impure-in-render → `useState(() => Date.now())`);
+    `npm run build` exit 0, `dist/_redirects` có mặt.
+  - **Lưu ý test:** HomePage spec mock `@tanstack/react-router` (`Link` → `<a href={to}>`) + mock
+    TaskRepository/ProjectRepository; assert thẻ qua `getByRole('group', { name })`.
+  - **Còn lại (vận hành):** deploy FE, đặt `VITE_BASE_API_URL`, báo URL FE cho BE đặt `CORS_ORIGIN`.
 - 2026-06-19 (phiên 9): ✅ **Kéo functions coverage lên**. Thêm 4 repository spec (26 test):
   `ProjectRepository` (9), `TaskRepository` (5), `UserRepository` (8), `CommentRepository` (4) —
   mock `axios` + `sonner` theo pattern `AuthRepository.spec.ts`, assert verb/URL/body. Việc này
