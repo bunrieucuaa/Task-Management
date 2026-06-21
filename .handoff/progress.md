@@ -9,8 +9,8 @@
 > Phạm vi đã chốt với user: **P0 + P1** (hoãn P2). Audit đầy đủ ở cả 2 repo (`task-be/.handoff/`).
 
 > ✅ **ĐÃ LÀM XONG P0 + P1 + cấu hình deploy (phiên 10, 2026-06-19).** Xem "Trạng thái hiện tại".
-> Việc còn lại chỉ là **vận hành**: deploy FE (Vercel/Netlify), đặt `VITE_BASE_API_URL` = URL BE thật,
-> rồi báo URL FE để BE đặt `CORS_ORIGIN`.
+> 🟢 **ĐÃ DEPLOY LIVE (phiên 11, 2026-06-21):** FE trên **Vercel**, BE trên Render, DB Neon. Admin
+> đăng nhập OK. Bài học deploy ở entry phiên 11.
 
 ### P0 — Bug chặn (FE)
 - [x] **`src/pages/HomePage.tsx` đang là placeholder** `<div>HomePage 123</div>` — đây là trang chủ
@@ -42,6 +42,19 @@ Tags/TaskTag, ActivityLog. Feature lớn → để sau khi deploy xong bản ch�
 
 ## Trạng thái hiện tại
 
+- 2026-06-21 (phiên 11): 🟢 **DEPLOY LIVE trên Vercel** (BE Render + DB Neon). Admin đăng nhập OK.
+  **Cấu hình Vercel:** import repo, Preset Vite, branch `dev`; build/output để `vercel.json` lo
+  (`npm run build` → `dist` + SPA rewrite). Env **`VITE_BASE_API_URL`** = `https://<be>.onrender.com/api/v1`
+  (**bắt buộc đuôi `/api/v1`**, không `/` cuối; Vite nướng vào lúc build → đặt TRƯỚC khi deploy).
+  **Bài học (lỗi đã gặp & fix):**
+  1. **Toàn bộ phiên 10 chưa từng commit/push** (HomePage, `vercel.json`, `_redirects`,
+     dọn interceptor) → đã commit + push lên `dev` (`4944fbe`). *Luôn push trước khi deploy.*
+  2. **401 sau khi login**: KHÔNG phải lỗi FE. Là do (a) CORS BE chưa trỏ về domain Vercel, và
+     (b) admin chưa seed vào Neon. Fix ở BE: đặt `CORS_ORIGIN` = URL FE + seed local (xem
+     `task-be/.handoff/`). Cách đọc lỗi: DevTools → Network → request `login` (CORS-blocked vs 401 vs 500).
+  3. Vercel sinh nhiều URL preview/branch khác origin → nếu CORS chỉ whitelist domain production thì
+     mở preview URL sẽ bị chặn. Dùng domain production cố định.
+  ⚠️ **Còn lại:** đổi mật khẩu admin mặc định; cân nhắc merge `dev → master` rồi trỏ Vercel sang `master`.
 - 2026-06-19 (phiên 10): ✅ **CHUẨN BỊ DEPLOY — P0 + P1 + cấu hình (FE).**
   - **P0 (TDD):** thay placeholder `HomePage` bằng **dashboard số liệu** (mức "dashboard" — quyết định
     theo autonomy preference của user). Gồm: lời chào theo tên user; 5 thẻ thống kê (Dự án / Tổng task
