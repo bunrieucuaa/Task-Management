@@ -2,169 +2,52 @@
 
 > Cập nhật file này cuối mỗi phiên. Mục quan trọng nhất: **Trạng thái hiện tại** + **Việc kế tiếp**.
 
-## 🚀 CHUẨN BỊ DEPLOY — việc cần làm (chốt 2026-06-19, làm trong chat MỚI)
-
-> Hướng deploy đã chốt: **PaaS** — FE lên **Vercel/Netlify**, BE lên **Render/Railway** + **managed
-> Postgres**. Test hiện tại coi như ĐỦ; không cần thêm test, tập trung fix dưới đây rồi deploy.
-> Phạm vi đã chốt với user: **P0 + P1** (hoãn P2). Audit đầy đủ ở cả 2 repo (`task-be/.handoff/`).
-
-> ✅ **ĐÃ LÀM XONG P0 + P1 + cấu hình deploy (phiên 10, 2026-06-19).** Xem "Trạng thái hiện tại".
-> 🟢 **ĐÃ DEPLOY LIVE (phiên 11, 2026-06-21):** FE trên **Vercel**, BE trên Render, DB Neon. Admin
-> đăng nhập OK. Bài học deploy ở entry phiên 11.
-
-### P0 — Bug chặn (FE)
-- [x] **`src/pages/HomePage.tsx` đang là placeholder** `<div>HomePage 123</div>` — đây là trang chủ
-  sau đăng nhập (route `src/routes/(app)/index.tsx`). Phải thay bằng dashboard/landing tử tế.
-  **Mức độ CHƯA chốt** — user để mình đề xuất. Gợi ý: **dashboard số liệu** (đếm project/task của
-  tôi, task theo status, task sắp tới hạn) dùng `ProjectRepository`/`TaskRepository` sẵn có; nếu gấp
-  thì landing đơn giản (chào theo tên user + nút điều hướng Projects/Tasks/Account). → Hỏi user chốt
-  mức rồi làm. Nhớ thêm test `HomePage.spec.tsx` (đang 0% coverage).
-- [ ] (Bug P0 phía BE: PM bị khoá khỏi app do `/auth/me` — xem `task-be/.handoff/progress.md`. FE
-  không cần sửa, nhưng đây là lý do PM hiện không đăng nhập được; test lại luồng PM sau khi BE fix.)
-
-### P1 — Dọn cho production (FE)
-- [x] **Bỏ debug log trong `src/app/shared/config/axios-interceptor.ts`** (4 `console.log` ~dòng
-  49/56/60/75). Đặc biệt dòng `console.log("[Interceptor] Response refresh:", response.data)` **log
-  cả nội dung refresh token** → rủi ro lộ thông tin. Bỏ hết hoặc guard `if (import.meta.env.DEV)`.
-
-### Cấu hình deploy FE (Vercel/Netlify)
-- Build command: `npm run build` (chạy `vite build && tsc -b`), output dir: `dist`.
-- Env: đặt **`VITE_BASE_API_URL`** = URL BE production (vd `https://<be>.onrender.com/api/v1`).
-- **SPA fallback bắt buộc** (TanStack Router client-side): rewrite mọi route → `/index.html`
-  (Vercel: `vercel.json` rewrites; Netlify: `_redirects` `/* /index.html 200`). Chưa có file này.
-- Sau khi có URL FE → cập nhật **`CORS_ORIGIN`** ở BE cho khớp.
-
-### P2 — HOÃN (có trong DB schema nhưng chưa implement)
-AI features (`AiHistory`), Task attachments (upload file — `postWithFile` có sẵn chưa dùng),
-Tags/TaskTag, ActivityLog. Feature lớn → để sau khi deploy xong bản chạy được.
-
----
-
 ## Trạng thái hiện tại
 
-- 2026-06-21 (phiên 11): 🟢 **DEPLOY LIVE trên Vercel** (BE Render + DB Neon). Admin đăng nhập OK.
-  **Cấu hình Vercel:** import repo, Preset Vite, branch `dev`; build/output để `vercel.json` lo
-  (`npm run build` → `dist` + SPA rewrite). Env **`VITE_BASE_API_URL`** = `https://<be>.onrender.com/api/v1`
-  (**bắt buộc đuôi `/api/v1`**, không `/` cuối; Vite nướng vào lúc build → đặt TRƯỚC khi deploy).
-  **Bài học (lỗi đã gặp & fix):**
-  1. **Toàn bộ phiên 10 chưa từng commit/push** (HomePage, `vercel.json`, `_redirects`,
-     dọn interceptor) → đã commit + push lên `dev` (`4944fbe`). *Luôn push trước khi deploy.*
-  2. **401 sau khi login**: KHÔNG phải lỗi FE. Là do (a) CORS BE chưa trỏ về domain Vercel, và
-     (b) admin chưa seed vào Neon. Fix ở BE: đặt `CORS_ORIGIN` = URL FE + seed local (xem
-     `task-be/.handoff/`). Cách đọc lỗi: DevTools → Network → request `login` (CORS-blocked vs 401 vs 500).
-  3. Vercel sinh nhiều URL preview/branch khác origin → nếu CORS chỉ whitelist domain production thì
-     mở preview URL sẽ bị chặn. Dùng domain production cố định.
-  ⚠️ **Còn lại:** đổi mật khẩu admin mặc định; cân nhắc merge `dev → master` rồi trỏ Vercel sang `master`.
-- 2026-06-19 (phiên 10): ✅ **CHUẨN BỊ DEPLOY — P0 + P1 + cấu hình (FE).**
-  - **P0 (TDD):** thay placeholder `HomePage` bằng **dashboard số liệu** (mức "dashboard" — quyết định
-    theo autonomy preference của user). Gồm: lời chào theo tên user; 5 thẻ thống kê (Dự án / Tổng task
-    — từ `pagination.total`; To Do / In Progress / Done — đếm từ `tasks.items`); danh sách **Task sắp
-    tới hạn** (lọc task chưa Done/Cancelled, deadline ≥ now, sort tăng dần, lấy 5). Thẻ "Dự án"/"Tổng
-    task" là `Link` tới `/projects`, `/tasks`. Dùng redux thunks `fetchProjects` (limit 1, chỉ lấy
-    total) + `fetchTasks` (limit 100). Viết test ĐỎ trước (`HomePage.spec.tsx`, 6 test) rồi mới
-    implement. **HomePage coverage 98%.**
-  - **P1:** xoá 4 `console.log` debug trong `axios-interceptor.ts` (gồm dòng log nội dung refresh
-    token — rủi ro lộ thông tin). Giữ `console.warn`/`console.error` hợp lệ.
-  - **Cấu hình deploy:** thêm **`vercel.json`** (buildCommand/outputDir + SPA rewrites → `/index.html`)
-    và **`public/_redirects`** (`/* /index.html 200` cho Netlify, Vite copy vào `dist/` — đã kiểm).
-    Thêm comment hướng dẫn `VITE_BASE_API_URL` vào `.env.example`.
-  - **Kiểm chứng:** `npm run test:coverage` **156 PASS** (tăng từ 150), thresholds exit 0;
-    `npm run lint` sạch (sửa `Date.now()` impure-in-render → `useState(() => Date.now())`);
-    `npm run build` exit 0, `dist/_redirects` có mặt.
-  - **Lưu ý test:** HomePage spec mock `@tanstack/react-router` (`Link` → `<a href={to}>`) + mock
-    TaskRepository/ProjectRepository; assert thẻ qua `getByRole('group', { name })`.
-  - **Còn lại (vận hành):** deploy FE, đặt `VITE_BASE_API_URL`, báo URL FE cho BE đặt `CORS_ORIGIN`.
-- 2026-06-19 (phiên 9): ✅ **Kéo functions coverage lên**. Thêm 4 repository spec (26 test):
-  `ProjectRepository` (9), `TaskRepository` (5), `UserRepository` (8), `CommentRepository` (4) —
-  mock `axios` + `sonner` theo pattern `AuthRepository.spec.ts`, assert verb/URL/body. Việc này
-  cover sâu `BaseApiService` + `BaseApiDataSource` (nhiều hàm CRUD). Đồng thời **loại file type-only/
-  codegen** khỏi coverage (entities, repositories/interfaces, routes, `redux/store.ts`,
-  `hooks/use-mobile.ts`) và thêm `coverage` vào eslint ignore. **Functions 47.45% → 60.83%**
-  (stmts/lines 68.8 → 75.3, branch 75.5 → 79.3). Nâng floor: **72/75/56/72**. **Tổng: 150 test /
-  26 file, tất cả PASS**, lint sạch, `test:coverage` exit 0. (Tăng từ 124/22.)
-- 2026-06-19 (phiên 8): ✅ **Bật coverage threshold**. Thêm `coverage.thresholds` vào
-  `vitest.config.ts` (floor: stmts 64 / branch 70 / **funcs 42** / lines 64) và đổi bước test
-  trong CI sang `npm run test:coverage`. `funcs` thấp (~47%) vì nhiều trang phụ/aux chưa test
-  (HomePage, AccountPage, auth pages, layouts, vài repository). Coverage hiện tại: **68.84% stmts /
-  75.47% branch / 47.45% funcs / 68.84% lines**, exit 0. Floor đặt dưới mức thực tế để CI không đỏ.
-- 2026-06-19 (phiên 7): ✅ Test trang **Tasks** (`src/pages/Tasks.tsx`, route `/(app)/tasks`).
-  Thêm `Tasks.spec.tsx` (8 test): load tasks + project options on mount, render rows (project +
-  assignee), empty-state, search → page 1, mở create dialog, mở comments dialog từ row menu (gọi
-  `listCommentsAsync`), và **phân quyền row menu** (member không phải creator/assignee → "Chỉnh sửa"/
-  "Xoá" `aria-disabled`; admin thì không). **Tổng: 124 test / 22 file, tất cả PASS**, lint sạch.
-  (Tăng từ 116/21.)
-  ⚠️ **Đính chính phiên 5/6:** *có* trang Tasks riêng — file tên `src/pages/Tasks.tsx` (component
-  `Tasks`, không có hậu tố "Page" nên glob cũ không thấy). Mọi trang chính giờ đã có test.
-- 2026-06-19 (phiên 6): ✅ Test `ProjectsPage`. Thêm `ProjectsPage.spec.tsx` (8 test): fetch
-  projects on mount + directory chỉ cho manager, ẩn/hiện nút "Tạo project" theo role, render rows
-  (owner + member count), empty-state, search → page 1, mở create dialog, mở members dialog từ
-  row dropdown (gọi `listMembersAsync`). **Tổng: 116 test / 21 file, tất cả PASS**, lint sạch.
-  (Tăng từ 108/20.) Lưu ý: Radix `DropdownMenu` cần polyfill `hasPointerCapture`/`setPointerCapture`/
-  `releasePointerCapture` trong test mới mở được menu (đặt ở `beforeAll` của spec).
-- 2026-06-19 (phiên 5): ✅ Test 2 dialog còn lại + trang đầu tiên. Thêm
-  `TemporaryPasswordDialog.spec.tsx` (3 test), `ProjectMembersDialog.spec.tsx` (6 test: lọc
-  available, filter search, add/remove, ẩn khi không manageable) và `UsersPage.spec.tsx` (6 test:
-  redirect non-admin, fetch on mount, render rows, empty-state, mở create dialog, search → page 1).
-  **Tổng: 108 test / 20 file, tất cả PASS**, lint sạch, build OK. (Tăng từ 93/17.)
-  Lưu ý pattern test page: page **luôn refetch khi mount** nên dữ liệu rows phải đẩy qua repository
-  mock + `findBy*` (preloaded `items` sẽ bị ghi đè); mock `@tanstack/react-router` (`useNavigate` +
-  `Navigate`) và `sonner`.
-- 2026-06-18 (phiên 4): ✅ Test dialog + interceptor + **dọn sạch nợ lint, bật lint chặn CI**.
-  Thêm `axios-interceptor.spec.tsx` (6 test: refresh 401 một lần, logout khi fail, 403 handling)
-  và test 4 dialog: `UserCreateDialog`, `ProjectFormDialog`, `TaskFormDialog`, `TaskCommentsDialog`
-  (14 test). Sửa nợ lint app (BaseApiDataSource `any`→`unknown`, EResultCode duplicate, 2 chỗ
-  set-state-in-effect) + override eslint cho `components/ui/**` & `main.tsx`. `npm run lint` giờ
-  **sạch** và CI đã chuyển lint thành bước chặn. **Tổng: 93 test / 17 file, tất cả PASS**, build OK.
-  (Tăng từ 73/12.)
-- 2026-06-18 (phiên 3): ✅ Test route Guard. Thêm `layouts/Guards.spec.tsx` (9 test) cho
-  `AuthGuard` / `GuestGuard` / `MustChangePasswordGuard` (redirect, render children/outlet,
-  loader khi init). **Tổng: 73 test / 12 file, tất cả PASS.** `npm run build` vẫn OK.
-  (Tăng từ 64/11.)
-- 2026-06-18 (phiên 2): ✅ Mở rộng test slice. Thêm `projectsSlice.spec.ts` (11 test) +
-  `commentsSlice.spec.ts` (5 test). **Tổng: 64 test / 11 file, tất cả PASS.** `npm run build`
-  vẫn OK. (Tăng từ 48/9.)
-- 2026-06-18: ✅ Hoàn tất hạ tầng test + bộ test FE. **48 test / 9 file, tất cả PASS.**
-  `npm run build` (vite + tsc) chạy OK (test bị loại khỏi build). CI đã thêm.
+🟢 **DEPLOY LIVE (2026-06-21):** FE trên **Vercel**, BE trên Render, DB Neon. Admin đăng nhập OK.
+**156 test PASS**, coverage floor 72/75/56/72 (CI chạy `test:coverage`, lint chặn). P0 (HomePage
+dashboard thay placeholder) + P1 (xoá debug log lộ refresh token trong `axios-interceptor.ts`) đã xong.
 
-## Mục tiêu phiên này
+**Cấu hình Vercel:** import repo, Preset Vite, branch `dev`; build/output để `vercel.json` lo
+(`npm run build` → `dist` + SPA rewrite; có cả `public/_redirects` cho Netlify). Env
+**`VITE_BASE_API_URL`** = `https://<be>.onrender.com/api/v1` (**bắt buộc đuôi `/api/v1`**, không `/`
+cuối; Vite nướng vào lúc build → đặt TRƯỚC khi deploy).
 
-- [x] Cài Vitest + jsdom + Testing Library, cấu hình `vitest.config.ts` + `src/test/setup.ts`.
-- [x] Unit test: lib/utils, jwt.extention, enums (ERole/EResultCode).
-- [x] Redux slice test (mock repository): auth, users, tasks.
-- [x] Repository test (mock axios): AuthRepository (+ BaseApiDataSource gián tiếp).
-- [x] Component test (RTL): LoginForm, ChangePasswordForm.
-- [x] GitHub Actions CI (lint non-blocking + build + test) → `.github/workflows/ci.yml`.
+**Bài học deploy:**
+1. **Luôn commit + push trước khi deploy** (Vercel kéo `origin/dev`).
+2. **401 sau login KHÔNG phải lỗi FE** — do BE: (a) `CORS_ORIGIN` chưa trỏ domain Vercel, (b) admin
+   chưa seed. Đọc lỗi: DevTools → Network → request `login` (CORS-blocked vs 401 vs 500).
+3. Vercel sinh nhiều URL preview khác origin → CORS chỉ whitelist domain production thì preview bị
+   chặn. Dùng domain production cố định.
+
+⚠️ **Nên làm:** đổi mật khẩu admin mặc định; cân nhắc merge `dev → master` rồi trỏ Vercel sang `master`.
+
+<details><summary>Lịch sử (gọn)</summary>
+
+- Hạ tầng test (Vitest + RTL + jsdom) + bộ test: utils/enums/jwt, redux slices (auth/users/tasks/
+  projects/comments), repository (mock axios), Guards, dialog, `axios-interceptor` (refresh flow),
+  trang chính (Users/Projects/Tasks/HomePage) → **156 test / 27 file**. Lint sạch & chặn CI.
+- Lưu ý test: page **luôn refetch khi mount** → đẩy data qua repository mock + `findBy*`; mock
+  `@tanstack/react-router` (`useNavigate`/`Navigate`/`Link`) + `sonner`; Radix `DropdownMenu` cần
+  polyfill `hasPointerCapture`/`setPointerCapture`/`releasePointerCapture` ở `beforeAll`.
+- Trang còn 0% coverage (nếu muốn nâng floor): `AccountPage`, `Register`, `ResetPassword`, layouts.
+</details>
+
+## Việc kế tiếp — P2 (chưa implement)
+
+> Bắt đầu đợt này (2026-06-21): **Tags + ActivityLog + animation + kéo thả**.
+
+- **Tags / TaskTag** (BE đã có model): UI gán/gỡ tag cho task, badge tag trên row, lọc theo tag.
+- **ActivityLog** (BE đã có model): timeline lịch sử thay đổi của task (trong dialog task).
+- **Kéo thả:** dùng **dnd-kit** (`@dnd-kit/core` + `sortable`) — vd board theo status hoặc sắp xếp.
+- **Animation:** transition chuyển trang + toggle light/dark (xem mục Quyết định bên dưới).
+- Còn lại: Task attachments (upload — `postWithFile` có sẵn chưa dùng), AI (`AiHistory`).
 
 ## Quyết định
 
-- Test framework: **Vitest** + React Testing Library + jsdom. Chốt với user 2026-06-18.
-- Mức độ: ưu tiên logic (slices, repositories, utils) + component auth chính.
-- CI: ban đầu lint **không chặn** (nợ lint app) — cổng chặn = build + test.
-  Từ phiên 4: nợ lint đã dọn → **lint thành bước chặn** cùng build + test.
-
-## Việc kế tiếp (gợi ý cho phiên sau)
-
-- ~~Thêm test cho các slice còn lại: `projectsSlice`, `commentsSlice`~~ ✅ xong (phiên 2).
-  → Mọi slice giờ đã có test.
-- ~~Test các Guard: `AuthGuard`, `GuestGuard`, `MustChangePasswordGuard`~~ ✅ xong (phiên 3).
-- ~~Test component dialog (`ProjectFormDialog`, `TaskFormDialog`, `UserCreateDialog`,
-  `TaskCommentsDialog`)~~ ✅ xong (phiên 4).
-- ~~Test `axios-interceptor` (refresh-token flow)~~ ✅ xong (phiên 4).
-- ~~Dọn nợ lint app + bật lint chặn CI~~ ✅ xong (phiên 4) — `npm run lint` sạch.
-- ~~Test `ProjectMembersDialog` + `TemporaryPasswordDialog` (2 dialog còn lại)~~ ✅ xong (phiên 5).
-  → Mọi dialog giờ đã có test.
-- ~~Test trang `UsersPage`~~ ✅ xong (phiên 5).
-- ~~Test `ProjectsPage`~~ ✅ xong (phiên 6).
-- ~~Test trang Tasks~~ ✅ xong (phiên 7) — `src/pages/Tasks.tsx` (route `/(app)/tasks`).
-  → **Mọi trang chính (`UsersPage`, `ProjectsPage`, `Tasks`) đã có test.**
-- ~~Sửa bug BE `verifyToken`~~ ✅ xong (BE phiên 6). ~~Bật `coverage` threshold đồng bộ FE + BE~~
-  ✅ xong (FE phiên 8 / BE phiên 7).
-- ~~Tăng coverage `functions` qua repository tests~~ ✅ xong (phiên 9) — funcs 47→61%, floor 56.
-- **(gợi ý kế tiếp)** Đẩy `functions` cao hơn nữa: test các trang còn 0% — `AccountPage`,
-  `Register`, `ResetPassword`, `HomePage`, `layout.tsx`/`SplitLayout`, và các handler chưa cover
-  trong `Tasks`/`ProjectsPage`/`UsersPage` (delete + confirm, pagination Prev/Next, quick-update).
-  Rồi nâng floor tiếp. Cân nhắc DB integration test thật (Testcontainers) ở BE.
+- Test: **Vitest** + RTL + jsdom. Ưu tiên logic (slices/repositories/utils) + trang chính. CI: lint
+  (chặn) + build + `test:coverage`.
 
 ## Lệnh nhanh
 
-- `npm test` · `npm run test:coverage` · `npm run build`
+- `npm test` · `npm run test:coverage` · `npm run build` · `npm run lint`
