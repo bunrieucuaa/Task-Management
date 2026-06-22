@@ -19,6 +19,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useId } from "react";
 import { useTheme } from "next-themes";
+import { motion, useReducedMotion } from "framer-motion";
+import PageTransition from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,6 +33,7 @@ import {
 export default function Layout({ children }: { children: React.ReactNode }) {
   const id = useId();
   const { theme, setTheme } = useTheme();
+  const reduceMotion = useReducedMotion();
   const checked = theme === "dark";
   const setChecked = (next: boolean) => setTheme(next ? "dark" : "light");
   const toggleSwitch = () => setChecked(!checked);
@@ -77,14 +80,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               className="flex group items-center gap-2"
               data-state={checked ? "checked" : "unchecked"}
             >
-              <span
+              <motion.span
                 id={`${id}-light`}
                 className="group-data-[state=checked]:text-muted-foreground/70 cursor-pointer text-left text-sm font-medium"
                 aria-controls={id}
                 onClick={() => setChecked(false)}
+                animate={
+                  reduceMotion
+                    ? undefined
+                    : { rotate: checked ? -25 : 0, scale: checked ? 0.85 : 1 }
+                }
+                transition={{ type: "spring", stiffness: 320, damping: 18 }}
               >
                 <SunIcon className="size-4" aria-hidden="true" />
-              </span>
+              </motion.span>
               <Switch
                 id={id}
                 checked={checked}
@@ -92,14 +101,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 aria-labelledby={`${id}-dark ${id}-light`}
                 aria-label="Toggle between dark and light mode"
               />
-              <span
+              <motion.span
                 id={`${id}-dark`}
                 className="group-data-[state=unchecked]:text-muted-foreground/70 cursor-pointer text-right text-sm font-medium"
                 aria-controls={id}
                 onClick={() => setChecked(true)}
+                animate={
+                  reduceMotion
+                    ? undefined
+                    : { rotate: checked ? 0 : 25, scale: checked ? 1 : 0.85 }
+                }
+                transition={{ type: "spring", stiffness: 320, damping: 18 }}
               >
                 <MoonIcon className="size-4" aria-hidden="true" />
-              </span>
+              </motion.span>
 
               <div className="flex flex-wrap items-center ml-2 gap-2 md:flex-row">
                 <DropdownMenu>
@@ -126,7 +141,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Card className="min-h-full">
             <CardContent className="h-full">
               <div className="border-card-foreground/10 h-full rounded-md">
-                {children}
+                <PageTransition>{children}</PageTransition>
               </div>
             </CardContent>
           </Card>

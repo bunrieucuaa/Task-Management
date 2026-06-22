@@ -8,7 +8,7 @@
 **186 test PASS**, coverage 77/80/64/77 (floor 72/75/56/72, CI chạy `test:coverage`, lint chặn).
 P0/P1 đã xong từ trước.
 
-✅ **FE Đợt 1 — Tags + ActivityLog (2026-06-22): XONG, chưa commit/deploy.** Build + lint + tsc sạch.
+✅ **FE Đợt 1 — Tags + ActivityLog (2026-06-22): XONG, đã commit `0361e3d` + push `origin/dev`.** Build + lint + tsc sạch.
 - `TagRepository` (list/create/delete/attach/detach) + `ActivityRepository` (listByTask) + spec (mock axios).
 - `tagsSlice` (fetchTags/createTag/deleteTag, đăng ký store + test/render.tsx) + spec.
 - Util `tagColor(name)` (hash tên → màu badge, không cột color) + `describeActivity(activity)` (action → câu
@@ -21,8 +21,8 @@ P0/P1 đã xong từ trước.
 - `Tasks.tsx`: badge tag trên row, dropdown lọc theo `tagId`, refetch khi đóng dialog edit.
 - `task.entity.ts`: thêm `tags: ITag[]` vào ITask + `tagId?` vào ITaskListQuery.
 
-⚠️ **Việc cần làm ngay:** commit + push `dev` (FE & cả BE Đợt 1 nếu chưa) rồi smoke trên app live
-(tạo tag → gắn vào task → lọc → đổi status → xem dòng lịch sử).
+✅ **Commit + push xong** (FE `0361e3d`, BE `25614fe`/`ae85f1f` — đều trên `origin/dev`, 0 ahead/behind).
+⏭️ **Còn lại:** smoke trên app live (tạo tag → gắn vào task → lọc → đổi status → xem dòng lịch sử) + bắt đầu Đợt 2.
 
 **Cấu hình Vercel:** import repo, Preset Vite, branch `dev`; build/output để `vercel.json` lo
 (`npm run build` → `dist` + SPA rewrite; có cả `public/_redirects` cho Netlify). Env
@@ -57,9 +57,16 @@ cuối; Vite nướng vào lúc build → đặt TRƯỚC khi deploy).
 
 ### ✅ FE Đợt 1 — Tags + ActivityLog: ĐÃ XONG (2026-06-22). Xem mục "Trạng thái hiện tại".
 
-### ⏭️ Đợt 2 (làm tiếp)
-- **dnd-kit** Kanban theo status (kéo đổi status → BE tự sinh ActivityLog).
-- **Framer Motion**: transition chuyển trang + hiệu ứng toggle light/dark.
+### ✅ Đợt 2 — Kanban + Framer Motion: XONG (2026-06-22, CHƯA commit/push). Spec: `task-be/.handoff/specs/2026-06-22-kanban-animation.md`
+- **dnd-kit Kanban** (view toggle Bảng ⇄ Kanban trên `Tasks.tsx`, mặc định Bảng): kéo card sang cột
+  khác → đổi status qua `handleQuickUpdate` (BE tự sinh ActivityLog). Chỉ task `canEdit` mới kéo được.
+  Logic thuần ở `src/lib/kanban.ts` (KANBAN_COLUMNS/groupTasksByStatus/resolveStatusChange, 100% cover);
+  component `src/components/pages/tasks/TaskBoard.tsx` (DndContext, 5 cột = 5 status).
+- **Framer Motion**: `src/components/PageTransition.tsx` (fade+slide theo pathname, bọc `{children}` trong
+  `layout.tsx`) + animate icon Sun/Moon khi toggle dark mode. Cả hai tôn trọng `prefers-reduced-motion`.
+- **208 test pass** (186 → +22), coverage 77.81/81/64.23/77.81 (trên floor). Build + lint + tsc sạch.
+- ⚠️ **Việc cần làm ngay:** commit + push `dev` (push → Vercel auto-deploy) rồi smoke: mở Kanban,
+  kéo TODO→IN_PROGRESS, xem status đổi + dòng ActivityLog mới; toggle dark mode; chuyển trang có transition.
 
 ### Còn lại P2
 - Task attachments (upload — `postWithFile` có sẵn chưa dùng), AI (`AiHistory`).

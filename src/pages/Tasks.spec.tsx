@@ -201,6 +201,21 @@ describe('<Tasks />', () => {
     expect(screen.getByRole('menuitem', { name: /Bình luận/ })).not.toHaveAttribute('aria-disabled');
   });
 
+  it('switches to the Kanban board view and lays tasks out in status columns', async () => {
+    const user = userEvent.setup();
+    taskRepo.listTasksAsync.mockResolvedValue({
+      success: true,
+      data: { data: [taskRow], pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } },
+    });
+    renderPage(ERole.Admin, 1);
+    await screen.findByText('Demo task');
+    await user.click(screen.getByRole('button', { name: /Kanban/ }));
+    const todoColumn = screen.getByTestId('column-TODO');
+    expect(within(todoColumn).getByTestId('task-card-5')).toBeInTheDocument();
+    // The table header is gone once the board takes over.
+    expect(screen.queryByRole('columnheader', { name: 'Tiêu đề' })).not.toBeInTheDocument();
+  });
+
   it('enables edit/delete in the row menu for an admin', async () => {
     const user = userEvent.setup();
     taskRepo.listTasksAsync.mockResolvedValue({

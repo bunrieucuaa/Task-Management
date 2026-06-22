@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { History, MessageSquare, MoreHorizontal, Plus, RefreshCcw } from "lucide-react";
+import {
+  History,
+  LayoutGrid,
+  MessageSquare,
+  MoreHorizontal,
+  Plus,
+  RefreshCcw,
+  TableIcon,
+} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +45,7 @@ import TaskFormDialog, {
 } from "@/components/pages/tasks/TaskFormDialog";
 import TaskCommentsDialog from "@/components/pages/tasks/TaskCommentsDialog";
 import TaskActivityDialog from "@/components/pages/tasks/TaskActivityDialog";
+import TaskBoard from "@/components/pages/tasks/TaskBoard";
 import { fetchMembers, fetchProjects } from "@/redux/projectsSlice";
 import {
   createTask,
@@ -64,6 +73,7 @@ export default function Tasks() {
   const [commentsTask, setCommentsTask] = useState<ITask | null>(null);
   const [activityOpen, setActivityOpen] = useState(false);
   const [activityTask, setActivityTask] = useState<ITask | null>(null);
+  const [view, setView] = useState<"table" | "board">("table");
 
   // Load project options + the tag catalog once for the pickers / filters.
   useEffect(() => {
@@ -242,9 +252,29 @@ export default function Tasks() {
             Quản lý công việc theo project. Chọn project để lọc và giao việc cho thành viên.
           </p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="size-4" /> Tạo task
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-md border p-0.5">
+            <Button
+              variant={view === "table" ? "secondary" : "ghost"}
+              size="sm"
+              aria-pressed={view === "table"}
+              onClick={() => setView("table")}
+            >
+              <TableIcon className="size-4" /> Bảng
+            </Button>
+            <Button
+              variant={view === "board" ? "secondary" : "ghost"}
+              size="sm"
+              aria-pressed={view === "board"}
+              onClick={() => setView("board")}
+            >
+              <LayoutGrid className="size-4" /> Kanban
+            </Button>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="size-4" /> Tạo task
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-6">
@@ -341,6 +371,14 @@ export default function Tasks() {
       </div>
 
       <div className="rounded-xl border bg-card p-4 shadow-sm">
+        {view === "board" ? (
+          <TaskBoard
+            tasks={items}
+            canEdit={canEdit}
+            onStatusChange={(task, status) => handleQuickUpdate(task, { status })}
+            submitting={submitting}
+          />
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -458,6 +496,7 @@ export default function Tasks() {
             )}
           </TableBody>
         </Table>
+        )}
 
         <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
