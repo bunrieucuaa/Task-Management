@@ -18,7 +18,9 @@ import { AppSelect } from "@/components/ui/app-select";
 import { DatePicker } from "@/components/ui/date-picker";
 import type { ITask } from "@/app/entities/task.entity";
 import type { IProject, IProjectMember } from "@/app/entities/project.entity";
+import type { ITag } from "@/app/entities/tag.entity";
 import { ETaskPriority, TASK_PRIORITY_LABELS } from "@/app/shared/enums/ETaskPriority";
+import TagPicker from "./TagPicker";
 
 export interface TaskFormSubmit {
   projectId: number;
@@ -41,6 +43,16 @@ interface TaskFormDialogProps {
   /** Ask the parent to load the members of a project (for the assignee picker). */
   onProjectChange: (projectId: number | null) => void;
   onSubmit: (payload: TaskFormSubmit) => Promise<void> | void;
+  /**
+   * Tag management (edit mode only). Tags attach/detach against an existing
+   * task id, so the section is hidden when creating. Optional so the create
+   * flow and prop-light tests don't need a tag catalog.
+   */
+  tags?: ITag[];
+  selectedTagIds?: number[];
+  canCreateTag?: boolean;
+  onToggleTag?: (tag: ITag) => void;
+  onCreateTag?: (name: string) => void;
 }
 
 /** Sentinel for the "unassigned" option (Radix Select forbids value=""). */
@@ -78,8 +90,14 @@ export default function TaskFormDialog({
   members,
   onProjectChange,
   onSubmit,
+  tags,
+  selectedTagIds = [],
+  canCreateTag = false,
+  onToggleTag,
+  onCreateTag,
 }: TaskFormDialogProps) {
   const isEdit = Boolean(task);
+  const showTags = isEdit && Boolean(tags && onToggleTag && onCreateTag);
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(formSchema),
@@ -249,6 +267,19 @@ export default function TaskFormDialog({
               </div>
             )}
           />
+
+          {showTags ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nhãn</label>
+              <TagPicker
+                tags={tags!}
+                selectedIds={selectedTagIds}
+                canCreate={canCreateTag}
+                onToggle={onToggleTag!}
+                onCreate={onCreateTag!}
+              />
+            </div>
+          ) : null}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

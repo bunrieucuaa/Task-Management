@@ -1,6 +1,7 @@
 import { ETaskPriority } from "@/app/shared/enums/ETaskPriority";
 import { ETaskStatus } from "@/app/shared/enums/ETaskStatus";
 import type { IProjectUserSummary } from "./project.entity";
+import type { ITag } from "./tag.entity";
 
 export interface ITask {
   id: number;
@@ -17,6 +18,7 @@ export interface ITask {
   creator: IProjectUserSummary | null;
   assignee: IProjectUserSummary | null;
   project: { id: number; name: string } | null;
+  tags: ITag[];
 }
 
 export interface ITaskListQuery {
@@ -26,6 +28,7 @@ export interface ITaskListQuery {
   assigneeId?: number | "";
   status?: ETaskStatus | "";
   priority?: ETaskPriority | "";
+  tagId?: number | "";
   deadlineFrom?: string;
   deadlineTo?: string;
   search?: string;

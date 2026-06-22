@@ -7,6 +7,7 @@ import usersReducer from '@/redux/usersSlice';
 import projectsReducer from '@/redux/projectsSlice';
 import tasksReducer from '@/redux/tasksSlice';
 import commentsReducer from '@/redux/commentsSlice';
+import tagsReducer from '@/redux/tagsSlice';
 
 export const makeTestStore = (preloadedState?: Record<string, unknown>) =>
   configureStore({
@@ -16,6 +17,7 @@ export const makeTestStore = (preloadedState?: Record<string, unknown>) =>
       projects: projectsReducer,
       tasks: tasksReducer,
       comments: commentsReducer,
+      tags: tagsReducer,
     },
     preloadedState: preloadedState as never,
   });

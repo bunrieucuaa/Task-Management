@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { MessageSquare, MoreHorizontal, Plus, RefreshCcw } from "lucide-react";
+import { History, MessageSquare, MoreHorizontal, Plus, RefreshCcw } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,14 +24,19 @@ import {
 
 /** Sentinel for the "all" filter option (Radix Select forbids value=""). */
 const ALL = "ALL";
-import { ERole } from "@/app/shared/enums/ERole";
+import { ERole, isPrivilegedRole } from "@/app/shared/enums/ERole";
 import { ETaskStatus, TASK_STATUS_LABELS } from "@/app/shared/enums/ETaskStatus";
 import { ETaskPriority, TASK_PRIORITY_LABELS } from "@/app/shared/enums/ETaskPriority";
 import type { ITask, ITaskListQuery, IUpdateTaskPayload } from "@/app/entities/task.entity";
+import type { ITag } from "@/app/entities/tag.entity";
+import { cn } from "@/lib/utils";
+import { tagColor } from "@/lib/tagColor";
+import { TagRepository } from "@/app/repositories/TagRepository";
 import TaskFormDialog, {
   type TaskFormSubmit,
 } from "@/components/pages/tasks/TaskFormDialog";
 import TaskCommentsDialog from "@/components/pages/tasks/TaskCommentsDialog";
+import TaskActivityDialog from "@/components/pages/tasks/TaskActivityDialog";
 import { fetchMembers, fetchProjects } from "@/redux/projectsSlice";
 import {
   createTask,
@@ -40,6 +45,7 @@ import {
   initialFilters,
   updateTask,
 } from "@/redux/tasksSlice";
+import { createTag, fetchTags } from "@/redux/tagsSlice";
 
 export default function Tasks() {
   const dispatch = useAppDispatch();
@@ -47,17 +53,22 @@ export default function Tasks() {
   const { items, loading, submitting, pagination } = useAppSelector((state) => state.tasks);
   const projects = useAppSelector((state) => state.projects.items);
   const members = useAppSelector((state) => state.projects.members);
+  const tags = useAppSelector((state) => state.tags.items);
 
   const [query, setQuery] = useState<ITaskListQuery>(initialFilters);
   const [draft, setDraft] = useState<ITaskListQuery>(initialFilters);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ITask | null>(null);
+  const [editingTags, setEditingTags] = useState<ITag[]>([]);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentsTask, setCommentsTask] = useState<ITask | null>(null);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const [activityTask, setActivityTask] = useState<ITask | null>(null);
 
-  // Load project options once for the picker / filters.
+  // Load project options + the tag catalog once for the pickers / filters.
   useEffect(() => {
     void dispatch(fetchProjects({ page: 1, limit: 100, sortBy: "name", sortOrder: "asc" }));
+    void dispatch(fetchTags());
   }, [dispatch]);
 
   useEffect(() => {
@@ -75,6 +86,8 @@ export default function Tasks() {
 
   const canDelete = (task: ITask) =>
     user.role === ERole.Admin || task.creatorId === user.id;
+
+  const canCreateTag = isPrivilegedRole(user.role as ERole);
 
   function handleDraftChange<Key extends keyof ITaskListQuery>(
     key: Key,
@@ -108,12 +121,55 @@ export default function Tasks() {
 
   function openEdit(task: ITask) {
     setEditingTask(task);
+    setEditingTags(task.tags ?? []);
     setFormOpen(true);
   }
 
   function openComments(task: ITask) {
     setCommentsTask(task);
     setCommentsOpen(true);
+  }
+
+  function openActivity(task: ITask) {
+    setActivityTask(task);
+    setActivityOpen(true);
+  }
+
+  // Attach/detach a tag on the task being edited. Optimistic: update the local
+  // selection immediately, revert if the request fails (BaseApiDataSource toasts).
+  async function handleToggleTag(tag: ITag) {
+    if (!editingTask) {
+      return;
+    }
+    const attached = editingTags.some((item) => item.id === tag.id);
+    const repo = new TagRepository();
+    setEditingTags((previous) =>
+      attached ? previous.filter((item) => item.id !== tag.id) : [...previous, tag],
+    );
+    const response = attached
+      ? await repo.detachFromTaskAsync(editingTask.id, tag.id)
+      : await repo.attachToTaskAsync(editingTask.id, tag.id);
+    if (!response.success) {
+      // Revert on failure.
+      setEditingTags((previous) =>
+        attached ? [...previous, tag] : previous.filter((item) => item.id !== tag.id),
+      );
+    }
+  }
+
+  async function handleCreateTag(name: string) {
+    const created = await dispatch(createTag(name)).unwrap();
+    if (created) {
+      await handleToggleTag(created);
+    }
+  }
+
+  // Refresh the list when the edit dialog closes so tag changes show on the rows.
+  function handleFormOpenChange(open: boolean) {
+    setFormOpen(open);
+    if (!open && editingTask) {
+      void dispatch(fetchTasks(query));
+    }
   }
 
   async function handleSubmitForm(payload: TaskFormSubmit) {
@@ -235,6 +291,18 @@ export default function Tasks() {
           ]}
         />
 
+        <AppSelect
+          className="w-full"
+          value={draft.tagId ? String(draft.tagId) : ALL}
+          onValueChange={(value) =>
+            handleDraftChange("tagId", value === ALL ? "" : Number(value))
+          }
+          options={[
+            { value: ALL, label: "Tất cả nhãn" },
+            ...tags.map((tag) => ({ value: String(tag.id), label: tag.name })),
+          ]}
+        />
+
         <Input
           value={draft.search ?? ""}
           onChange={(event) => handleDraftChange("search", event.target.value)}
@@ -306,6 +374,21 @@ export default function Tasks() {
                           {task.description}
                         </div>
                       ) : null}
+                      {task.tags && task.tags.length > 0 ? (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {task.tags.map((tag) => (
+                            <span
+                              key={tag.id}
+                              className={cn(
+                                "rounded px-1.5 py-0.5 text-xs font-medium",
+                                tagColor(tag.name),
+                              )}
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
                     </TableCell>
                     <TableCell>{task.project?.name ?? "—"}</TableCell>
                     <TableCell>{task.assignee?.name ?? "Chưa giao"}</TableCell>
@@ -356,6 +439,9 @@ export default function Tasks() {
                           <DropdownMenuItem onClick={() => openComments(task)}>
                             <MessageSquare className="size-4" /> Bình luận
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openActivity(task)}>
+                            <History className="size-4" /> Lịch sử
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             variant="destructive"
                             disabled={!canDelete(task) || submitting}
@@ -401,7 +487,7 @@ export default function Tasks() {
 
       <TaskFormDialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={handleFormOpenChange}
         submitting={submitting}
         task={editingTask}
         defaultProjectId={draft.projectId === "" ? null : Number(draft.projectId)}
@@ -413,12 +499,23 @@ export default function Tasks() {
           }
         }}
         onSubmit={handleSubmitForm}
+        tags={tags}
+        selectedTagIds={editingTags.map((tag) => tag.id)}
+        canCreateTag={canCreateTag}
+        onToggleTag={handleToggleTag}
+        onCreateTag={handleCreateTag}
       />
 
       <TaskCommentsDialog
         open={commentsOpen}
         onOpenChange={setCommentsOpen}
         task={commentsTask}
+      />
+
+      <TaskActivityDialog
+        open={activityOpen}
+        onOpenChange={setActivityOpen}
+        task={activityTask}
       />
     </div>
   );

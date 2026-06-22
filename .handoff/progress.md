@@ -5,8 +5,24 @@
 ## Trạng thái hiện tại
 
 🟢 **DEPLOY LIVE (2026-06-21):** FE trên **Vercel**, BE trên Render, DB Neon. Admin đăng nhập OK.
-**156 test PASS**, coverage floor 72/75/56/72 (CI chạy `test:coverage`, lint chặn). P0 (HomePage
-dashboard thay placeholder) + P1 (xoá debug log lộ refresh token trong `axios-interceptor.ts`) đã xong.
+**186 test PASS**, coverage 77/80/64/77 (floor 72/75/56/72, CI chạy `test:coverage`, lint chặn).
+P0/P1 đã xong từ trước.
+
+✅ **FE Đợt 1 — Tags + ActivityLog (2026-06-22): XONG, chưa commit/deploy.** Build + lint + tsc sạch.
+- `TagRepository` (list/create/delete/attach/detach) + `ActivityRepository` (listByTask) + spec (mock axios).
+- `tagsSlice` (fetchTags/createTag/deleteTag, đăng ký store + test/render.tsx) + spec.
+- Util `tagColor(name)` (hash tên → màu badge, không cột color) + `describeActivity(activity)` (action → câu
+  tiếng Việt) ở `src/lib/`, có spec.
+- `TaskActivityDialog` (mirror CommentsDialog, fetch trực tiếp qua repository, timeline + icon theo action +
+  `formatDistanceToNow` locale vi) — mở từ dropdown "Lịch sử" ở Tasks.tsx.
+- `TagPicker` (Popover multi-select, badge màu, tạo tag inline cho admin/PM) — presentational thuần.
+- `TaskFormDialog`: TagPicker **chỉ ở edit mode** (attach/detach cần taskId; props optional để không phá test
+  cũ dùng `render` không Provider). Wiring (Redux + TagRepository, optimistic + revert) ở Tasks.tsx.
+- `Tasks.tsx`: badge tag trên row, dropdown lọc theo `tagId`, refetch khi đóng dialog edit.
+- `task.entity.ts`: thêm `tags: ITag[]` vào ITask + `tagId?` vào ITaskListQuery.
+
+⚠️ **Việc cần làm ngay:** commit + push `dev` (FE & cả BE Đợt 1 nếu chưa) rồi smoke trên app live
+(tạo tag → gắn vào task → lọc → đổi status → xem dòng lịch sử).
 
 **Cấu hình Vercel:** import repo, Preset Vite, branch `dev`; build/output để `vercel.json` lo
 (`npm run build` → `dist` + SPA rewrite; có cả `public/_redirects` cho Netlify). Env
@@ -39,28 +55,9 @@ cuối; Vite nướng vào lúc build → đặt TRƯỚC khi deploy).
 > **global**, ActivityLog **timeline trong dialog task**, Kanban **theo status** (Đợt 2),
 > dnd-kit + Framer Motion. **BE Đợt 1 ĐÃ XONG** (commit `25614fe` + `ae85f1f`, 213 test).
 
-### ⏭️ FE Đợt 1 — Tags + ActivityLog (làm tiếp ở chat mới)
+### ✅ FE Đợt 1 — Tags + ActivityLog: ĐÃ XONG (2026-06-22). Xem mục "Trạng thái hiện tại".
 
-**BE đã sẵn sàng — hợp đồng API (base đã có `/api/v1`):**
-- `GET /tags` → `{ tags: [{id,name}] }` · `POST /tags {name}` (admin/PM, 409 trùng) ·
-  `DELETE /tags/:id` (admin).
-- `POST /tasks/:taskId/tags {tagId}` · `DELETE /tasks/:taskId/tags/:tagId` (cần quyền sửa task).
-- Task list/detail **đã kèm** `tags: [{id,name}]`; lọc `GET /tasks?tagId=<id>`.
-- `GET /tasks/:taskId/activities` → paginated, mới nhất trước; mỗi item `{id, action, oldValue,
-  newValue, createdAt, user}`. Action: `TASK_CREATED, STATUS_CHANGED, ASSIGNEE_CHANGED,
-  DEADLINE_CHANGED, PRIORITY_CHANGED, TAG_ADDED, TAG_REMOVED`.
-
-**Việc FE (theo TDD, mirror `CommentRepository`/`TaskCommentsDialog`):**
-1. `TagRepository` (list/create/delete/attachToTask/detachFromTask) + `ActivityRepository`
-   (listByTask). Có thể thêm `tagsSlice`.
-2. **TaskFormDialog:** combobox multi-select gắn/gỡ tag (Radix sẵn có); admin/PM tạo tag inline.
-3. **Tasks.tsx:** badge tag trên mỗi row (màu từ hash tên — util `tagColor(name)`, KHÔNG có cột color);
-   dropdown lọc theo tag → set query `tagId`.
-4. **Dialog task:** tab/khu **"Lịch sử"** — timeline render từ `ActivityRepository`; util
-   `describeActivity(activity)` map action → câu mô tả tiếng Việt + `date-fns formatDistanceToNow`.
-5. Test: repository spec (mock axios), component spec combobox/badge/lọc/timeline. Giữ trên floor.
-
-### Đợt 2 (sau Đợt 1)
+### ⏭️ Đợt 2 (làm tiếp)
 - **dnd-kit** Kanban theo status (kéo đổi status → BE tự sinh ActivityLog).
 - **Framer Motion**: transition chuyển trang + hiệu ứng toggle light/dark.
 

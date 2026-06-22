@@ -4,6 +4,7 @@ import usersSlice from "@/redux/usersSlice";
 import projectsSlice from "@/redux/projectsSlice";
 import tasksSlice from "@/redux/tasksSlice";
 import commentsSlice from "@/redux/commentsSlice";
+import tagsSlice from "@/redux/tagsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     projects: projectsSlice,
     tasks: tasksSlice,
     comments: commentsSlice,
+    tags: tagsSlice,
   },
 });
 
