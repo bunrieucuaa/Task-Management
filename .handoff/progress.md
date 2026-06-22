@@ -57,7 +57,7 @@ cuối; Vite nướng vào lúc build → đặt TRƯỚC khi deploy).
 
 ### ✅ FE Đợt 1 — Tags + ActivityLog: ĐÃ XONG (2026-06-22). Xem mục "Trạng thái hiện tại".
 
-### ✅ Đợt 2 — Kanban + Framer Motion: XONG (2026-06-22, CHƯA commit/push). Spec: `task-be/.handoff/specs/2026-06-22-kanban-animation.md`
+### ✅ Đợt 2 — Kanban + Framer Motion: XONG (2026-06-22, commit `9b91f78` + push `origin/dev`). Spec: `task-be/.handoff/specs/2026-06-22-kanban-animation.md`
 - **dnd-kit Kanban** (view toggle Bảng ⇄ Kanban trên `Tasks.tsx`, mặc định Bảng): kéo card sang cột
   khác → đổi status qua `handleQuickUpdate` (BE tự sinh ActivityLog). Chỉ task `canEdit` mới kéo được.
   Logic thuần ở `src/lib/kanban.ts` (KANBAN_COLUMNS/groupTasksByStatus/resolveStatusChange, 100% cover);
@@ -65,8 +65,8 @@ cuối; Vite nướng vào lúc build → đặt TRƯỚC khi deploy).
 - **Framer Motion**: `src/components/PageTransition.tsx` (fade+slide theo pathname, bọc `{children}` trong
   `layout.tsx`) + animate icon Sun/Moon khi toggle dark mode. Cả hai tôn trọng `prefers-reduced-motion`.
 - **208 test pass** (186 → +22), coverage 77.81/81/64.23/77.81 (trên floor). Build + lint + tsc sạch.
-- ⚠️ **Việc cần làm ngay:** commit + push `dev` (push → Vercel auto-deploy) rồi smoke: mở Kanban,
-  kéo TODO→IN_PROGRESS, xem status đổi + dòng ActivityLog mới; toggle dark mode; chuyển trang có transition.
+- ⏭️ **Còn lại:** smoke trên app live sau khi Vercel deploy xong: mở Kanban, kéo TODO→IN_PROGRESS,
+  xem status đổi + dòng ActivityLog mới; toggle dark mode; chuyển trang có transition.
 
 ### Còn lại P2
 - Task attachments (upload — `postWithFile` có sẵn chưa dùng), AI (`AiHistory`).
